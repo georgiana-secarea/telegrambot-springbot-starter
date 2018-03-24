@@ -30,6 +30,9 @@ public class SimpleUpdateHandler implements UpdatesListener {
 	@Autowired
 	private TelegramBot bot;
 
+	volatile int currentChatId;
+	volatile String currentLocation;
+
 	@Override
 	public int process(List<Update> updates) {
 
@@ -102,11 +105,19 @@ public class SimpleUpdateHandler implements UpdatesListener {
 				sendMessage = new SendMessage(chatId, "Your location has been saved internally: " + location)
 						.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
 						.replyMarkup(contactReplyKeyboard);
+
+				currentChatId = chatId;
+				currentLocation = location;
+
 			} else if (userContact != null) {
 				sendMessage = new SendMessage(chatId,
 						"Your phone number has been saved internally: " + userContact.phoneNumber())
 								.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
 								.replyMarkup(new ForceReply());
+				if (currentChatId == chatId) {
+					// INSERT INTO USERS VALUES (userContact.phoneNumber(), currentLocation)
+					System.out.println("Hey GeGe - fill me please!");
+				}
 			} else {
 				sendMessage = new SendMessage(chatId, "How may I be at your service?").parseMode(ParseMode.HTML)
 						.disableNotification(false).replyToMessageId(messageId).replyMarkup(new ForceReply());
