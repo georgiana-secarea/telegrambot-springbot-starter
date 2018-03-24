@@ -1,4 +1,4 @@
-package ro.vladfernoaga.telegram_chatbot_starter.controller;
+package com.weather.telegram_chatbot_starter.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import ro.vladfernoaga.telegram_chatbot_starter.dto.BasicInfoDto;
-import ro.vladfernoaga.telegram_chatbot_starter.service.BasicService;
+import com.weather.telegram_chatbot_starter.dto.BasicInfoDto;
+import com.weather.telegram_chatbot_starter.service.BasicService;
 
 @RestController
 public class BasicController {

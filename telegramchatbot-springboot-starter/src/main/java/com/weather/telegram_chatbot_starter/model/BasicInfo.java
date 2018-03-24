@@ -1,4 +1,4 @@
-package ro.vladfernoaga.telegram_chatbot_starter.model;
+package com.weather.telegram_chatbot_starter.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

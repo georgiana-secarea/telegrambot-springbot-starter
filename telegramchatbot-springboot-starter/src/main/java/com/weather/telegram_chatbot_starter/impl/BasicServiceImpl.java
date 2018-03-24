@@ -1,4 +1,4 @@
-package ro.vladfernoaga.telegram_chatbot_starter.impl;
+package com.weather.telegram_chatbot_starter.impl;
 
 import java.util.Optional;
 
@@ -10,10 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
-import ro.vladfernoaga.telegram_chatbot_starter.dto.BasicInfoDto;
-import ro.vladfernoaga.telegram_chatbot_starter.model.BasicInfo;
-import ro.vladfernoaga.telegram_chatbot_starter.repo.BasicRepo;
-import ro.vladfernoaga.telegram_chatbot_starter.service.BasicService;
+import com.weather.telegram_chatbot_starter.dto.BasicInfoDto;
+import com.weather.telegram_chatbot_starter.model.BasicInfo;
+import com.weather.telegram_chatbot_starter.repo.BasicRepo;
+import com.weather.telegram_chatbot_starter.service.BasicService;
 
 @Service
 public class BasicServiceImpl implements BasicService {
@@ -44,7 +44,7 @@ public class BasicServiceImpl implements BasicService {
 				return toBasicInfoDto(basicInfo);
 			} catch (DataIntegrityViolationException ex) {
 				throw new IllegalArgumentException(
-						String.format("The name %s allreay exist in this seesion please try with other name.", name));
+						String.format("The name %s already exists in this seesion, please try with other name.", name));
 			}
 
 		}

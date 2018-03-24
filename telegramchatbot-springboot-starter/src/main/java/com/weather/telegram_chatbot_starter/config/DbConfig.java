@@ -1,4 +1,4 @@
-package ro.vladfernoaga.telegram_chatbot_starter.config;
+package com.weather.telegram_chatbot_starter.config;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,7 +21,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 /** The Main Configuration Setup for the DataBase **/
 @Configuration
-@EnableJpaRepositories(basePackages = "ro.vladfernoaga.telegram_chatbot_starter.repo",
+@EnableJpaRepositories(basePackages = "com.weather.telegram_chatbot_starter.repo",
     entityManagerFactoryRef = "entityManagerFactory", transactionManagerRef = "transactionManager")
 public class DbConfig {
 
@@ -44,7 +44,7 @@ public class DbConfig {
 
     factory.setDataSource(dataSource());
     factory.setJpaVendorAdapter(vendorAdapter);
-    factory.setPackagesToScan("ro.vladfernoaga.telegram_chatbot_starter.model");
+    factory.setPackagesToScan("com.weather.telegram_chatbot_starter.model");
 
     Map<String, String> jpaProperties = new HashMap<>();
     jpaProperties.put("hibernate.hbm2ddl.auto", prop.getHibernateAuto());

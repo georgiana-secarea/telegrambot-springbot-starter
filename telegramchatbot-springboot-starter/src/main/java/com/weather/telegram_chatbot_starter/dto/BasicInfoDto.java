@@ -1,4 +1,4 @@
-package ro.vladfernoaga.telegram_chatbot_starter.dto;
+package com.weather.telegram_chatbot_starter.dto;
 
 public class BasicInfoDto {
 	
