@@ -110,6 +110,7 @@ public class SimpleUpdateHandler implements UpdatesListener {
 				currentLocation = location;
 
 			} else if (userContact != null) {
+
 				sendMessage = new SendMessage(chatId,
 						"Your phone number has been saved internally: " + userContact.phoneNumber())
 								.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
