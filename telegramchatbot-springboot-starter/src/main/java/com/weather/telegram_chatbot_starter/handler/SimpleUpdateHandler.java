@@ -7,8 +7,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import com.weather.telegram_chatbot_starter.geocoding.ReverseGeocoding;
+import com.weather.telegram_chatbot_starter.model.Person;
+import com.weather.telegram_chatbot_starter.repo.PersonRepo;
+import com.weather.telegram_chatbot_starter.service.PersonService;
 import com.google.maps.errors.ApiException;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
@@ -110,7 +114,8 @@ public class SimpleUpdateHandler implements UpdatesListener {
 				currentLocation = location;
 
 			} else if (userContact != null) {
-
+				
+				insertPerson(userContact);
 				sendMessage = new SendMessage(chatId,
 						"Your phone number has been saved internally: " + userContact.phoneNumber())
 								.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
@@ -165,6 +170,22 @@ public class SimpleUpdateHandler implements UpdatesListener {
 		replyKeyboard.resizeKeyboard(true);
 		replyKeyboard.oneTimeKeyboard(true);
 		return replyKeyboard;
+	}
+	
+	@Autowired
+	PersonRepo personRepo;
+	
+	private void insertPerson(Contact contact)
+	{
+		
+		Person person = new Person();
+		person.setUserId(contact.userId());
+		person.setPhoneNumber(contact.phoneNumber());
+		person.setFirstName(contact.firstName());
+		person.setLastName(contact.lastName());
+		
+		
+		personRepo.save(person);
 	}
 
 }

@@ -48,7 +48,30 @@ public class PersonServiceImpl implements PersonService{
 
 			}
 		}
+		
+		@Override
+		@Transactional
+		public PersonDto addNewOrGetExisting(int id, String phoneNumber) {
+			Optional<Person> person = personRepo.findById(id);
+			if (person.isPresent()) {
+				LOGGER.info(() -> String.format("The person with id %s is allready present",id));
+				return toPersonDto(person.get());
+			} else {
+				LOGGER.info(() -> String.format("The person with id %s is not present",id));
+				Person person2 = new Person();
+				person2.setUserId(id);
+				person2.setPhoneNumber(phoneNumber);
+				try {
+					personRepo.save(person2);
+					return toPersonDto(person2);
+				} catch (DataIntegrityViolationException ex) {
+					throw new IllegalArgumentException(
+							String.format("The name %s already exists in this seesion, please try with other name.", id));
+				}
 
+			}
+		}
+		
 		private PersonDto toPersonDto(Person basic) {
 			return new PersonDto(basic.getUserId());
 		}

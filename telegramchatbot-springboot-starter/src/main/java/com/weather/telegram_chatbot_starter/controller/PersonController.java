@@ -24,4 +24,8 @@ public class PersonController {
 	public ResponseEntity<PersonDto> getPerson(@PathVariable("id") int id) {
 		return ResponseEntity.ok().body(personService.addNewOrGetExisting(id));
 	}
+	@RequestMapping(value = "/person/{id}/{phone}", produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.GET)
+	public ResponseEntity<PersonDto> getPerson(@PathVariable("id") int id, @PathVariable("phone") String phone) {
+		return ResponseEntity.ok().body(personService.addNewOrGetExisting(id, phone));
+	}
 }
