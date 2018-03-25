@@ -1,8 +1,10 @@
 package com.weather.telegram_chatbot_starter.handler;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,7 +19,6 @@ import com.weather.telegram_chatbot_starter.model.Location1;
 import com.weather.telegram_chatbot_starter.repo.LocationRepo;
 import com.weather.telegram_chatbot_starter.repo.PersonLocationRepo;
 import com.weather.telegram_chatbot_starter.repo.PersonRepo;
-import com.weather.telegram_chatbot_starter.service.PersonService;
 import com.google.maps.errors.ApiException;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
@@ -57,6 +58,7 @@ public class SimpleUpdateHandler implements UpdatesListener {
 			if (messageText != null) {
 				switch (messageText) {
 				case "/start": {
+					insertPerson(chatId);
 					KeyboardButton shareLocationButton = new KeyboardButton("Share location");
 					shareLocationButton.requestLocation(true);
 
@@ -97,8 +99,9 @@ public class SimpleUpdateHandler implements UpdatesListener {
 				ReverseGeocoding revGeo = new ReverseGeocoding();
 				try {
 					location = revGeo.getCity(userLocation.latitude(), userLocation.longitude());
-					insertLocation(location);
-					bindLocationToUser(chatId, location, false);
+					System.out.println("Location after 'Share location': "+location);
+					System.out.println("User id after 'Share location': "+chatId);
+					
 					
 				} catch (ApiException | InterruptedException | IOException e) {
 					e.printStackTrace();
@@ -120,6 +123,7 @@ public class SimpleUpdateHandler implements UpdatesListener {
 
 				currentChatId = chatId;
 				currentLocation = location;
+				insertLocation(location, chatId);
 				
 
 			} else if (userContact != null) {
@@ -186,8 +190,8 @@ public class SimpleUpdateHandler implements UpdatesListener {
 	PersonRepo personRepo;
 	@Autowired
 	LocationRepo locationRepo;
-	@Autowired
-	PersonLocationRepo personLocationRepo;
+//	@Autowired
+//	PersonLocationRepo personLocationRepo;
 
 	private void insertPerson(Contact contact) {
 
@@ -199,26 +203,46 @@ public class SimpleUpdateHandler implements UpdatesListener {
 
 		personRepo.save(person);
 	}
+	private void insertPerson(int chatId) {
 
-	private void insertLocation(String location) {
-		locationRepo.save(new Location1(location));
+		Person person = new Person();
+		person.setUserId(chatId);
+		
+
+		personRepo.save(person);
 	}
 
-	private void bindLocationToUser(int chatId, String location,boolean isfavorite) {
-		// get location
-		try {
-			Optional<Location1> loc = locationRepo.findByCity(location);
-			LOGGER.info(() -> String.format("Current city  %s",currentLocation));
-
-			if (loc.empty() != null) {
-				personLocationRepo.save(new PersonLocation(chatId, loc.get().getId(), isfavorite));
-				LOGGER.info(() -> String.format("Currenct city  id %s",loc.get().getId()));
-				LOGGER.info(() -> String.format("Person id %s",currentChatId));
-			}
-		} catch (Exception e) {
-			System.out.println(e.getStackTrace());
+	private void insertLocation(String location, int userId) {
+		
+//		insertPerson(userId);
+		Optional<Person> person = personRepo.findById(userId);
+		Set <Person> persons = new HashSet<Person>();
+	
+		if(person.empty()!=null) {
+			persons.add(person.get());
+			locationRepo.save(new Location1(location, persons));
 		}
-
+		else{
+			System.out.println("No user found");
+		}
+	
 	}
+
+//	private void bindLocationToUser(int chatId, String location,boolean isfavorite) {
+//		// get location
+//		try {
+//			Optional<Location1> loc = locationRepo.findByCity(location);
+//			LOGGER.info(() -> String.format("Current city  %s",currentLocation));
+//
+//			if (loc.empty() != null) {
+//				personLocationRepo.save(new PersonLocation(chatId, loc.get().getId(), isfavorite));
+//				LOGGER.info(() -> String.format("Currenct city  id %s",loc.get().getId()));
+//				LOGGER.info(() -> String.format("Person id %s",currentChatId));
+//			}
+//		} catch (Exception e) {
+//			System.out.println(e.getStackTrace());
+//		}
+//
+//	}
 
 }

@@ -1,10 +1,14 @@
 package com.weather.telegram_chatbot_starter.model;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
 @Entity
@@ -24,12 +28,16 @@ public class Person {
 	@Column(name = "LAST_NAME")
 	private String lastName;
 	
+	@ManyToMany(targetEntity = Location1.class)
+	private Set<Location1> locations;
+	
 	
 	public Person(String phone) {
+		locations = new HashSet<Location1>();
 		phoneNumber=phone;
 	}
 	public Person() {
-		
+		locations = new HashSet<Location1>();
 	}
 
 	public String getPhoneNumber() {
@@ -63,7 +71,19 @@ public class Person {
 	public void setUserId(int i) {
 		this.id = i;
 	}
-
+	
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
+	}
+	public Set<Location1> getLocations() {
+		return locations;
+	}
+	public void setLocations(Set<Location1> locations) {
+		this.locations = locations;
+	}
 	@Override
 	public int hashCode() {
 		final int prime = 31;

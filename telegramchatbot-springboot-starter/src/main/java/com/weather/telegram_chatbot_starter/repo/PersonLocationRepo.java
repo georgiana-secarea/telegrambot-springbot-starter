@@ -7,8 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.weather.telegram_chatbot_starter.model.PersonLocation;
 import com.weather.telegram_chatbot_starter.model.PersonLocationId;
 
-public interface PersonLocationRepo extends JpaRepository<PersonLocation, Long> {
+public interface PersonLocationRepo{ //extends JpaRepository<PersonLocation, Long> {
 
-	Optional<PersonLocation> findById(PersonLocationId name);
+	//Optional<PersonLocation> findById(PersonLocationId name);
 
 }
