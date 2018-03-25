@@ -2,6 +2,7 @@ package com.weather.telegram_chatbot_starter.handler;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -11,6 +12,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.weather.telegram_chatbot_starter.geocoding.ReverseGeocoding;
 import com.weather.telegram_chatbot_starter.model.Person;
+import com.weather.telegram_chatbot_starter.model.PersonLocation;
+import com.weather.telegram_chatbot_starter.model.Location1;
+import com.weather.telegram_chatbot_starter.repo.LocationRepo;
+import com.weather.telegram_chatbot_starter.repo.PersonLocationRepo;
 import com.weather.telegram_chatbot_starter.repo.PersonRepo;
 import com.weather.telegram_chatbot_starter.service.PersonService;
 import com.google.maps.errors.ApiException;
@@ -92,6 +97,9 @@ public class SimpleUpdateHandler implements UpdatesListener {
 				ReverseGeocoding revGeo = new ReverseGeocoding();
 				try {
 					location = revGeo.getCity(userLocation.latitude(), userLocation.longitude());
+					insertLocation(location);
+					bindLocationToUser(chatId, location, false);
+					
 				} catch (ApiException | InterruptedException | IOException e) {
 					e.printStackTrace();
 				}
@@ -112,15 +120,17 @@ public class SimpleUpdateHandler implements UpdatesListener {
 
 				currentChatId = chatId;
 				currentLocation = location;
+				
 
 			} else if (userContact != null) {
-				
+
 				insertPerson(userContact);
 				sendMessage = new SendMessage(chatId,
 						"Your phone number has been saved internally: " + userContact.phoneNumber())
 								.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
 								.replyMarkup(new ForceReply());
 				if (currentChatId == chatId) {
+				
 					// INSERT INTO USERS VALUES (userContact.phoneNumber(), currentLocation)
 					System.out.println("Hey GeGe - fill me please!");
 				}
@@ -171,21 +181,44 @@ public class SimpleUpdateHandler implements UpdatesListener {
 		replyKeyboard.oneTimeKeyboard(true);
 		return replyKeyboard;
 	}
-	
+
 	@Autowired
 	PersonRepo personRepo;
-	
-	private void insertPerson(Contact contact)
-	{
-		
+	@Autowired
+	LocationRepo locationRepo;
+	@Autowired
+	PersonLocationRepo personLocationRepo;
+
+	private void insertPerson(Contact contact) {
+
 		Person person = new Person();
 		person.setUserId(contact.userId());
 		person.setPhoneNumber(contact.phoneNumber());
 		person.setFirstName(contact.firstName());
 		person.setLastName(contact.lastName());
-		
-		
+
 		personRepo.save(person);
+	}
+
+	private void insertLocation(String location) {
+		locationRepo.save(new Location1(location));
+	}
+
+	private void bindLocationToUser(int chatId, String location,boolean isfavorite) {
+		// get location
+		try {
+			Optional<Location1> loc = locationRepo.findByCity(location);
+			LOGGER.info(() -> String.format("Current city  %s",currentLocation));
+
+			if (loc.empty() != null) {
+				personLocationRepo.save(new PersonLocation(chatId, loc.get().getId(), isfavorite));
+				LOGGER.info(() -> String.format("Currenct city  id %s",loc.get().getId()));
+				LOGGER.info(() -> String.format("Person id %s",currentChatId));
+			}
+		} catch (Exception e) {
+			System.out.println(e.getStackTrace());
+		}
+
 	}
 
 }
