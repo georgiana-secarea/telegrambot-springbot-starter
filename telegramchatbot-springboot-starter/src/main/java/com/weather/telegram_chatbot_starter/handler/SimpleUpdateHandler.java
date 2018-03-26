@@ -13,12 +13,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import com.weather.telegram_chatbot_starter.geocoding.ReverseGeocoding;
+import com.weather.telegram_chatbot_starter.geocoding.WeatherInfoGather;
 import com.weather.telegram_chatbot_starter.model.Person;
 import com.weather.telegram_chatbot_starter.model.PersonLocation;
+import com.weather.telegram_chatbot_starter.model.Weather;
 import com.weather.telegram_chatbot_starter.model.Location1;
 import com.weather.telegram_chatbot_starter.repo.LocationRepo;
 import com.weather.telegram_chatbot_starter.repo.PersonLocationRepo;
 import com.weather.telegram_chatbot_starter.repo.PersonRepo;
+
+import net.aksingh.owmjapis.api.APIException;
+
 import com.google.maps.errors.ApiException;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
@@ -99,10 +104,9 @@ public class SimpleUpdateHandler implements UpdatesListener {
 				ReverseGeocoding revGeo = new ReverseGeocoding();
 				try {
 					location = revGeo.getCity(userLocation.latitude(), userLocation.longitude());
-					System.out.println("Location after 'Share location': "+location);
-					System.out.println("User id after 'Share location': "+chatId);
-					
-					
+					// System.out.println("Location after 'Share location': " + location);
+					// System.out.println("User id after 'Share location': " + chatId);
+
 				} catch (ApiException | InterruptedException | IOException e) {
 					e.printStackTrace();
 				}
@@ -124,20 +128,25 @@ public class SimpleUpdateHandler implements UpdatesListener {
 				currentChatId = chatId;
 				currentLocation = location;
 				insertLocation(location, chatId);
-				
 
 			} else if (userContact != null) {
 
 				insertPerson(userContact);
-				sendMessage = new SendMessage(chatId,
-						"Your phone number has been saved internally: " + userContact.phoneNumber())
-								.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
-								.replyMarkup(new ForceReply());
-				if (currentChatId == chatId) {
-				
-					// INSERT INTO USERS VALUES (userContact.phoneNumber(), currentLocation)
-					System.out.println("Hey GeGe - fill me please!");
+
+				Weather currentWeather = new Weather();
+
+				WeatherInfoGather gatherCityWeather = new WeatherInfoGather();
+				try {
+					currentWeather = gatherCityWeather.getWeather(currentLocation);
+				} catch (APIException e) {
+					e.printStackTrace();
 				}
+
+				sendMessage = new SendMessage(chatId,
+						"Your phone number has been saved internally (" + userContact.phoneNumber()
+								+ "). Below you can find your location weather and forecast: " + currentWeather)
+										.parseMode(ParseMode.HTML).disableNotification(false)
+										.replyToMessageId(messageId).replyMarkup(new ForceReply());
 			} else {
 				sendMessage = new SendMessage(chatId, "How may I be at your service?").parseMode(ParseMode.HTML)
 						.disableNotification(false).replyToMessageId(messageId).replyMarkup(new ForceReply());
@@ -190,8 +199,8 @@ public class SimpleUpdateHandler implements UpdatesListener {
 	PersonRepo personRepo;
 	@Autowired
 	LocationRepo locationRepo;
-//	@Autowired
-//	PersonLocationRepo personLocationRepo;
+	// @Autowired
+	// PersonLocationRepo personLocationRepo;
 
 	private void insertPerson(Contact contact) {
 
@@ -203,46 +212,47 @@ public class SimpleUpdateHandler implements UpdatesListener {
 
 		personRepo.save(person);
 	}
+
 	private void insertPerson(int chatId) {
 
 		Person person = new Person();
 		person.setUserId(chatId);
-		
 
 		personRepo.save(person);
 	}
 
 	private void insertLocation(String location, int userId) {
-		
-//		insertPerson(userId);
+
+		// insertPerson(userId);
 		Optional<Person> person = personRepo.findById(userId);
-		Set <Person> persons = new HashSet<Person>();
-	
-		if(person.empty()!=null) {
+		Set<Person> persons = new HashSet<Person>();
+
+		if (person.empty() != null) {
 			persons.add(person.get());
 			locationRepo.save(new Location1(location, persons));
-		}
-		else{
+		} else {
 			System.out.println("No user found");
 		}
-	
+
 	}
 
-//	private void bindLocationToUser(int chatId, String location,boolean isfavorite) {
-//		// get location
-//		try {
-//			Optional<Location1> loc = locationRepo.findByCity(location);
-//			LOGGER.info(() -> String.format("Current city  %s",currentLocation));
-//
-//			if (loc.empty() != null) {
-//				personLocationRepo.save(new PersonLocation(chatId, loc.get().getId(), isfavorite));
-//				LOGGER.info(() -> String.format("Currenct city  id %s",loc.get().getId()));
-//				LOGGER.info(() -> String.format("Person id %s",currentChatId));
-//			}
-//		} catch (Exception e) {
-//			System.out.println(e.getStackTrace());
-//		}
-//
-//	}
+	// private void bindLocationToUser(int chatId, String location,boolean
+	// isfavorite) {
+	// // get location
+	// try {
+	// Optional<Location1> loc = locationRepo.findByCity(location);
+	// LOGGER.info(() -> String.format("Current city %s",currentLocation));
+	//
+	// if (loc.empty() != null) {
+	// personLocationRepo.save(new PersonLocation(chatId, loc.get().getId(),
+	// isfavorite));
+	// LOGGER.info(() -> String.format("Currenct city id %s",loc.get().getId()));
+	// LOGGER.info(() -> String.format("Person id %s",currentChatId));
+	// }
+	// } catch (Exception e) {
+	// System.out.println(e.getStackTrace());
+	// }
+	//
+	// }
 
 }

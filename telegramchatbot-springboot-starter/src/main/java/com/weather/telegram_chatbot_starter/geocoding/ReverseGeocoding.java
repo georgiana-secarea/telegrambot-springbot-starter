@@ -9,6 +9,10 @@ import com.google.maps.model.AddressType;
 import com.google.maps.model.GeocodingResult;
 import com.google.maps.model.LatLng;
 
+import net.aksingh.owmjapis.core.OWM;
+import net.aksingh.owmjapis.api.APIException;
+import net.aksingh.owmjapis.model.CurrentWeather;
+
 public class ReverseGeocoding {
 
 	public String getCity(double lat, double lng) throws ApiException, InterruptedException, IOException {
