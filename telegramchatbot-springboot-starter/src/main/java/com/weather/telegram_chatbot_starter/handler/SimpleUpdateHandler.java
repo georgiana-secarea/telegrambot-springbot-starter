@@ -104,8 +104,6 @@ public class SimpleUpdateHandler implements UpdatesListener {
 				ReverseGeocoding revGeo = new ReverseGeocoding();
 				try {
 					location = revGeo.getCity(userLocation.latitude(), userLocation.longitude());
-					// System.out.println("Location after 'Share location': " + location);
-					// System.out.println("User id after 'Share location': " + chatId);
 
 				} catch (ApiException | InterruptedException | IOException e) {
 					e.printStackTrace();
@@ -144,7 +142,7 @@ public class SimpleUpdateHandler implements UpdatesListener {
 
 				sendMessage = new SendMessage(chatId,
 						"Your phone number has been saved internally (" + userContact.phoneNumber()
-								+ "). Below you can find your location weather and forecast: " + currentWeather)
+								+ ").\nBelow you can find your location current weather: \r\n" + currentWeather)
 										.parseMode(ParseMode.HTML).disableNotification(false)
 										.replyToMessageId(messageId).replyMarkup(new ForceReply());
 			} else {
@@ -227,7 +225,7 @@ public class SimpleUpdateHandler implements UpdatesListener {
 		Optional<Person> person = personRepo.findById(userId);
 		Set<Person> persons = new HashSet<Person>();
 
-		if (person.empty() != null) {
+		if (Optional.empty() != null) {
 			persons.add(person.get());
 			locationRepo.save(new Location1(location, persons));
 		} else {
