@@ -23,11 +23,11 @@ public class WeatherInfoGather {
 			if (cwd.hasCityName()) {
 
 				Weather currentWeather = new Weather();
-				currentWeather.setTemperature(cwd.getMainData().getTemp());
+				currentWeather.setTemperature(cwd.getMainData().getTemp() - 273.15);
 				currentWeather.setDescription(cwd.getWeatherList().get(0).getDescription());
 				currentWeather.setPressure(cwd.getMainData().getPressure());
 				currentWeather.setHumidity(cwd.getMainData().getHumidity());
-
+				currentWeather.setRainfall(cwd.getCloudData().getCloud());
 				return currentWeather;
 			}
 

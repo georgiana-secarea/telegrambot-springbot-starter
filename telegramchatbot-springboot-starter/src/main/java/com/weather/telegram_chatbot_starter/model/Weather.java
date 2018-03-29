@@ -6,6 +6,15 @@ public class Weather {
 	private String description;
 	private Double pressure;
 	private Double humidity;
+	private Double rainfall;
+
+	public Double getRainfall() {
+		return rainfall;
+	}
+
+	public void setRainfall(Double rainfall) {
+		this.rainfall = rainfall;
+	}
 
 	public Double getTemperature() {
 		return temperature;
@@ -41,8 +50,8 @@ public class Weather {
 
 	@Override
 	public String toString() {
-		return "Weather [Temperature: " + temperature + " | Description: " + description + " | Pressure: " + pressure
-				+ "| Humidity: " + humidity + "]";
+		return "\r\n Temperature: " + temperature + "°C \r\n Description: " + description + " \r\n Rainfall: " + rainfall + "% \r\n Pressure: " + pressure
+				+ " HPA \r\n Humidity: " + humidity + "%";
 	}
 
 }
