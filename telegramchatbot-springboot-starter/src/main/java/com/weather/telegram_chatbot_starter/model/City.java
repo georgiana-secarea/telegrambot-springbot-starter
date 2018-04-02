@@ -16,7 +16,7 @@ import javax.persistence.JoinColumn;
 
 @Entity
 @Table(name = "LOCATION", schema = "public")
-public class Location1 {
+public class City {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "ID")
@@ -30,12 +30,12 @@ public class Location1 {
 	@ManyToMany(targetEntity = Person.class)
 	private Set<Person> persons= new HashSet<>();
 
-	public Location1(String city, Set<Person> persons) {
+	public City(String city, Set<Person> persons) {
 		this.persons = persons;
 		this.city = city;
 	}
 
-	public Location1() {
+	public City() {
 
 	}
 

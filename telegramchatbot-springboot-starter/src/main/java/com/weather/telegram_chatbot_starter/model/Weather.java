@@ -50,8 +50,9 @@ public class Weather {
 
 	@Override
 	public String toString() {
-		return "\r\n Temperature: " + temperature + "°C \r\n Description: " + description + " \r\n Rainfall: " + rainfall + "% \r\n Pressure: " + pressure
-				+ " HPA \r\n Humidity: " + humidity + "%";
+		return "\r\nTemperature: " + String.format("%.2f", temperature) + "°C \r\n Description: " + description
+				+ " \r\n Rainfall: " + rainfall + "% \r\n Pressure: " + pressure + " HPA \r\n Humidity: " + humidity
+				+ "%";
 	}
 
 }

@@ -4,12 +4,12 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.weather.telegram_chatbot_starter.model.Location1;
+import com.weather.telegram_chatbot_starter.model.City;
 
-public interface LocationRepo extends JpaRepository<Location1, Long> {
+public interface LocationRepo extends JpaRepository<City, Long> {
 
-	Optional<Location1> findById(Long name);
+	Optional<City> findById(Long name);
 
-	Optional<Location1> findByCity(String city);
+	Optional<City> findByCity(String city);
 	
 }

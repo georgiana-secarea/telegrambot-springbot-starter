@@ -10,16 +10,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
-
 import com.weather.telegram_chatbot_starter.geocoding.ReverseGeocoding;
 import com.weather.telegram_chatbot_starter.geocoding.WeatherInfoGather;
 import com.weather.telegram_chatbot_starter.model.Person;
-import com.weather.telegram_chatbot_starter.model.PersonLocation;
 import com.weather.telegram_chatbot_starter.model.Weather;
-import com.weather.telegram_chatbot_starter.model.Location1;
+import com.weather.telegram_chatbot_starter.model.City;
 import com.weather.telegram_chatbot_starter.repo.LocationRepo;
-import com.weather.telegram_chatbot_starter.repo.PersonLocationRepo;
 import com.weather.telegram_chatbot_starter.repo.PersonRepo;
 
 import net.aksingh.owmjapis.api.APIException;
@@ -45,8 +41,13 @@ public class SimpleUpdateHandler implements UpdatesListener {
 	@Autowired
 	private TelegramBot bot;
 
-	volatile int currentChatId;
-	volatile String currentLocation;
+	@Autowired
+	PersonRepo personRepo;
+
+	@Autowired
+	LocationRepo locationRepo;
+
+	ReplyKeyboardMarkup replyKeyboard = showMenu();
 
 	@Override
 	public int process(List<Update> updates) {
@@ -63,32 +64,68 @@ public class SimpleUpdateHandler implements UpdatesListener {
 			if (messageText != null) {
 				switch (messageText) {
 				case "/start": {
-					insertPerson(chatId);
-					KeyboardButton shareLocationButton = new KeyboardButton("Share location");
-					shareLocationButton.requestLocation(true);
 
-					KeyboardButton noLocationButton = new KeyboardButton("Deny");
+					Optional<Person> person = personRepo.findById(chatId);
+					if (person.isPresent() && person.get().getFirstName() != null) {
 
-					KeyboardButton[][] buttonsList = new KeyboardButton[1][2];
-					buttonsList[0][0] = shareLocationButton;
-					buttonsList[0][1] = noLocationButton;
+						sendMessage = new SendMessage(chatId,
+								"Welcome back, " + person.get().getFirstName() + " " + person.get().getLastName()
+										+ ".What would you wish to check?").parseMode(ParseMode.HTML)
+												.disableNotification(false).replyToMessageId(messageId)
+												.replyMarkup(replyKeyboard);
+					} else {
+						insertPerson(chatId);
 
-					ReplyKeyboardMarkup shareReplyKeyboard = new ReplyKeyboardMarkup(buttonsList);
-					shareReplyKeyboard.resizeKeyboard(true);
-					shareReplyKeyboard.oneTimeKeyboard(true);
+						KeyboardButton contactButton = new KeyboardButton("Share contact details");
+						KeyboardButton denyButton = new KeyboardButton("Deny");
+						contactButton.requestContact(true);
 
-					sendMessage = new SendMessage(chatId,
-							"Hi, I'm WeatherBOT. To receive daily notifications of your favorite location weather, please share your location and phone number.")
-									.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
-									.replyMarkup(shareReplyKeyboard);
+						KeyboardButton[][] buttonsList = new KeyboardButton[1][2];
+						buttonsList[0][0] = contactButton;
+						buttonsList[0][1] = denyButton;
+
+						ReplyKeyboardMarkup contactReplyKeyboard = new ReplyKeyboardMarkup(buttonsList);
+						contactReplyKeyboard.resizeKeyboard(true);
+						contactReplyKeyboard.oneTimeKeyboard(true);
+
+						sendMessage = new SendMessage(chatId,
+								"Hi, I'm WeatherBOT. To receive daily notifications of your favorite location weather, please share your name, phone number and location.")
+										.parseMode(ParseMode.HTML).disableNotification(false)
+										.replyToMessageId(messageId).replyMarkup(contactReplyKeyboard);
+					}
 					break;
 				}
 				case "Deny": {
-					ReplyKeyboardMarkup replyKeyboard = showMenu();
 
 					sendMessage = new SendMessage(chatId, "Alright, got it. Now, what would you wish to know?")
 							.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
 							.replyMarkup(replyKeyboard);
+					break;
+				}
+				case "Current weather for another location": {
+
+					sendMessage = new SendMessage(chatId, "Please choose your location first ...")
+							.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
+							.replyMarkup(new ForceReply());
+					break;
+				}
+				case "Weather forecast for another location": {
+
+					sendMessage = new SendMessage(chatId, "Please choose your location first ...")
+							.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
+							.replyMarkup(new ForceReply());
+					break;
+				}
+				case "My search list history": {
+
+					sendMessage = new SendMessage(chatId, "You may find your search history below:")
+							.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
+							.replyMarkup(new ForceReply());
+					break;
+				}
+				case "App credits": {
+					sendMessage = new SendMessage(chatId, "WIP").parseMode(ParseMode.HTML).disableNotification(false)
+							.replyToMessageId(messageId).replyMarkup(new ForceReply());
 					break;
 				}
 				default: {
@@ -97,6 +134,25 @@ public class SimpleUpdateHandler implements UpdatesListener {
 					break;
 				}
 				}
+			} else if (userContact != null) {
+
+				insertPerson(userContact);
+
+				KeyboardButton shareLocationButton = new KeyboardButton("Share location");
+				shareLocationButton.requestLocation(true);
+
+				KeyboardButton[][] buttonsList = new KeyboardButton[1][1];
+				buttonsList[0][0] = shareLocationButton;
+
+				ReplyKeyboardMarkup shareReplyKeyboard = new ReplyKeyboardMarkup(buttonsList);
+				shareReplyKeyboard.resizeKeyboard(true);
+				shareReplyKeyboard.oneTimeKeyboard(true);
+
+				sendMessage = new SendMessage(chatId,
+						"Your contact details have been saved internally (" + userContact.phoneNumber()
+								+ ").\nNow please share your location.").parseMode(ParseMode.HTML)
+										.disableNotification(false).replyToMessageId(messageId)
+										.replyMarkup(shareReplyKeyboard);
 			} else if (userLocation != null) {
 
 				String location = "Not available";
@@ -109,42 +165,22 @@ public class SimpleUpdateHandler implements UpdatesListener {
 					e.printStackTrace();
 				}
 
-				KeyboardButton contactButton = new KeyboardButton("Share phone number");
-				contactButton.requestContact(true);
-
-				KeyboardButton[][] buttonsList = new KeyboardButton[1][1];
-				buttonsList[0][0] = contactButton;
-
-				ReplyKeyboardMarkup contactReplyKeyboard = new ReplyKeyboardMarkup(buttonsList);
-				contactReplyKeyboard.resizeKeyboard(true);
-				contactReplyKeyboard.oneTimeKeyboard(true);
-
-				sendMessage = new SendMessage(chatId, "Your location has been saved internally: " + location)
-						.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
-						.replyMarkup(contactReplyKeyboard);
-
-				currentChatId = chatId;
-				currentLocation = location;
 				insertLocation(location, chatId);
-
-			} else if (userContact != null) {
-
-				insertPerson(userContact);
 
 				Weather currentWeather = new Weather();
 
 				WeatherInfoGather gatherCityWeather = new WeatherInfoGather();
 				try {
-					currentWeather = gatherCityWeather.getWeather(currentLocation);
+					currentWeather = gatherCityWeather.getWeather(location);
 				} catch (APIException e) {
 					e.printStackTrace();
 				}
 
-				sendMessage = new SendMessage(chatId,
-						"Your phone number has been saved internally (" + userContact.phoneNumber()
-								+ ").\nBelow you can find your location current weather: \r\n" + currentWeather)
-										.parseMode(ParseMode.HTML).disableNotification(false)
-										.replyToMessageId(messageId).replyMarkup(new ForceReply());
+				sendMessage = new SendMessage(chatId, "Your location has been saved internally (" + location
+						+ ").\nBelow you can find your location current weather, along the other functionalities menu: \r\n"
+						+ currentWeather).parseMode(ParseMode.HTML).disableNotification(false)
+								.replyToMessageId(messageId).replyMarkup(replyKeyboard);
+
 			} else {
 				sendMessage = new SendMessage(chatId, "How may I be at your service?").parseMode(ParseMode.HTML)
 						.disableNotification(false).replyToMessageId(messageId).replyMarkup(new ForceReply());
@@ -164,41 +200,33 @@ public class SimpleUpdateHandler implements UpdatesListener {
 	 */
 	private ReplyKeyboardMarkup showMenu() {
 
-		KeyboardButton savedLocationWeather = new KeyboardButton("My  location weather");
-
-		KeyboardButton currentLocationWeather = new KeyboardButton("Current weather for current location");
+		final KeyboardButton currentLocationWeather = new KeyboardButton("Current weather for current location");
 		currentLocationWeather.requestLocation(true);
 
-		KeyboardButton otherLocationWeather = new KeyboardButton("Current weather for another location");
+		final KeyboardButton otherLocationWeather = new KeyboardButton("Current weather for another location");
 
-		KeyboardButton currentLocationForecast = new KeyboardButton("Weather forecast for current location");
+		final KeyboardButton currentLocationForecast = new KeyboardButton("Weather forecast for current location");
 		currentLocationForecast.requestLocation(true);
 
-		KeyboardButton otherLocationForecast = new KeyboardButton("Weather forecast for another location");
+		final KeyboardButton otherLocationForecast = new KeyboardButton("Weather forecast for another location");
 
-		KeyboardButton userSearchHistory = new KeyboardButton("My search list history");
+		final KeyboardButton userSearchHistory = new KeyboardButton("My search list history");
 		userSearchHistory.requestContact(true);
 
-		KeyboardButton[][] buttonsList = new KeyboardButton[3][2];
-		buttonsList[0][0] = savedLocationWeather;
-		buttonsList[0][1] = currentLocationWeather;
-		buttonsList[1][0] = otherLocationWeather;
-		buttonsList[1][1] = currentLocationForecast;
-		buttonsList[2][0] = otherLocationForecast;
-		buttonsList[2][1] = userSearchHistory;
+		final KeyboardButton appCredits = new KeyboardButton("App credits");
 
-		ReplyKeyboardMarkup replyKeyboard = new ReplyKeyboardMarkup(buttonsList);
+		final KeyboardButton[][] buttonsList = new KeyboardButton[3][2];
+		buttonsList[0][0] = currentLocationWeather;
+		buttonsList[0][1] = otherLocationWeather;
+		buttonsList[1][0] = currentLocationForecast;
+		buttonsList[1][1] = otherLocationForecast;
+		buttonsList[2][0] = userSearchHistory;
+		buttonsList[2][1] = appCredits;
+
+		final ReplyKeyboardMarkup replyKeyboard = new ReplyKeyboardMarkup(buttonsList);
 		replyKeyboard.resizeKeyboard(true);
-		replyKeyboard.oneTimeKeyboard(true);
 		return replyKeyboard;
 	}
-
-	@Autowired
-	PersonRepo personRepo;
-	@Autowired
-	LocationRepo locationRepo;
-	// @Autowired
-	// PersonLocationRepo personLocationRepo;
 
 	private void insertPerson(Contact contact) {
 
@@ -221,36 +249,16 @@ public class SimpleUpdateHandler implements UpdatesListener {
 
 	private void insertLocation(String location, int userId) {
 
-		// insertPerson(userId);
 		Optional<Person> person = personRepo.findById(userId);
 		Set<Person> persons = new HashSet<Person>();
 
 		if (Optional.empty() != null) {
 			persons.add(person.get());
-			locationRepo.save(new Location1(location, persons));
+			locationRepo.save(new City(location, persons));
 		} else {
-			System.out.println("No user found");
+			LOGGER.info("No user found");
 		}
 
 	}
-
-	// private void bindLocationToUser(int chatId, String location,boolean
-	// isfavorite) {
-	// // get location
-	// try {
-	// Optional<Location1> loc = locationRepo.findByCity(location);
-	// LOGGER.info(() -> String.format("Current city %s",currentLocation));
-	//
-	// if (loc.empty() != null) {
-	// personLocationRepo.save(new PersonLocation(chatId, loc.get().getId(),
-	// isfavorite));
-	// LOGGER.info(() -> String.format("Currenct city id %s",loc.get().getId()));
-	// LOGGER.info(() -> String.format("Person id %s",currentChatId));
-	// }
-	// } catch (Exception e) {
-	// System.out.println(e.getStackTrace());
-	// }
-	//
-	// }
 
 }

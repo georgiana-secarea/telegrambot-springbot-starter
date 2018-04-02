@@ -33,7 +33,7 @@ public class BasicServiceImpl implements BasicService {
 	public BasicInfoDto addNewOrGetExisting(String name) {
 		Optional<BasicInfo> student = basicRepo.findByName(name);
 		if (student.isPresent()) {
-			LOGGER.info(() -> String.format("The student with name %s is allready present",name));
+			LOGGER.info(() -> String.format("The student with name %s is already present",name));
 			return toBasicInfoDto(student.get());
 		} else {
 			LOGGER.info(() -> String.format("The student with name %s is not present",name));
@@ -44,7 +44,7 @@ public class BasicServiceImpl implements BasicService {
 				return toBasicInfoDto(basicInfo);
 			} catch (DataIntegrityViolationException ex) {
 				throw new IllegalArgumentException(
-						String.format("The name %s already exists in this seesion, please try with other name.", name));
+						String.format("The name %s already exists in this session, please try with other name.", name));
 			}
 
 		}

@@ -5,39 +5,37 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
 @Entity
-@Table(name="PERSON", schema="public")
+@Table(name = "PERSON", schema = "public")
 public class Person {
 
 	@Id
 	@Column(name = "id")
 	private int id;
-	
-	@Column(name = "PHONE_NUM", unique=true)
+
+	@Column(name = "PHONE_NUM", unique = true)
 	private String phoneNumber;
-	
+
 	@Column(name = "FIRST_NAME")
 	private String firstName;
 
 	@Column(name = "LAST_NAME")
 	private String lastName;
-	
-	@ManyToMany(targetEntity = Location1.class)
-	private Set<Location1> locations;
-	
-	
+
+	@ManyToMany(targetEntity = City.class)
+	private Set<City> locations;
+
 	public Person(String phone) {
-		locations = new HashSet<Location1>();
-		phoneNumber=phone;
+		locations = new HashSet<City>();
+		phoneNumber = phone;
 	}
+
 	public Person() {
-		locations = new HashSet<Location1>();
+		locations = new HashSet<City>();
 	}
 
 	public String getPhoneNumber() {
@@ -71,19 +69,23 @@ public class Person {
 	public void setUserId(int i) {
 		this.id = i;
 	}
-	
+
 	public int getId() {
 		return id;
 	}
+
 	public void setId(int id) {
 		this.id = id;
 	}
-	public Set<Location1> getLocations() {
+
+	public Set<City> getLocations() {
 		return locations;
 	}
-	public void setLocations(Set<Location1> locations) {
+
+	public void setLocations(Set<City> locations) {
 		this.locations = locations;
 	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -124,8 +126,4 @@ public class Person {
 		return true;
 	}
 
-
-
-	
-	
 }
