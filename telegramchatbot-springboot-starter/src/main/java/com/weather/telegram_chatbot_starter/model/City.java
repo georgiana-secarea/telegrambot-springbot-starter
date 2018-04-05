@@ -9,30 +9,27 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
-import javax.persistence.JoinColumn;
+
 
 @Entity
-@Table(name = "LOCATION", schema = "public")
+@Table(name = "CITY", schema = "public")
 public class City {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "ID")
 	private long id;
 
-	@Column(name = "CITY")
-	private String city;
+	@Column(name = "NAME")
+	private String name;
 
-//	@ManyToMany(cascade = { CascadeType.ALL })
-//	@JoinTable(name = "person_location", joinColumns = @JoinColumn(name = "location_id"), inverseJoinColumns = @JoinColumn(name = "person_id"))
-	@ManyToMany(targetEntity = Person.class)
-	private Set<Person> persons= new HashSet<>();
+	@ManyToMany(mappedBy = "city", cascade = CascadeType.ALL)
+	private Set<Person> persons = new HashSet<>();
 
 	public City(String city, Set<Person> persons) {
 		this.persons = persons;
-		this.city = city;
+		this.name = city;
 	}
 
 	public City() {
@@ -48,11 +45,11 @@ public class City {
 	}
 
 	public String getCity() {
-		return city;
+		return name;
 	}
 
 	public void setCity(String city) {
-		this.city = city;
+		this.name = city;
 	}
 
 	public Set<Person> getPersons() {

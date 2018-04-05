@@ -26,16 +26,16 @@ public class Person {
 	@Column(name = "LAST_NAME")
 	private String lastName;
 
-	@ManyToMany(targetEntity = City.class)
-	private Set<City> locations;
+	@ManyToMany()
+	private Set<City> city;
 
 	public Person(String phone) {
-		locations = new HashSet<City>();
+		city = new HashSet<City>();
 		phoneNumber = phone;
 	}
 
 	public Person() {
-		locations = new HashSet<City>();
+		city = new HashSet<City>();
 	}
 
 	public String getPhoneNumber() {
@@ -78,12 +78,12 @@ public class Person {
 		this.id = id;
 	}
 
-	public Set<City> getLocations() {
-		return locations;
+	public Set<City> getCity() {
+		return city;
 	}
 
-	public void setLocations(Set<City> locations) {
-		this.locations = locations;
+	public void setCity(Set<City> city) {
+		this.city = city;
 	}
 
 	@Override

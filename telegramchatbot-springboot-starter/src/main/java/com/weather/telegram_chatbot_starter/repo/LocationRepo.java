@@ -10,6 +10,6 @@ public interface LocationRepo extends JpaRepository<City, Long> {
 
 	Optional<City> findById(Long name);
 
-	Optional<City> findByCity(String city);
+	Optional<City> findByName(String name);
 	
 }
