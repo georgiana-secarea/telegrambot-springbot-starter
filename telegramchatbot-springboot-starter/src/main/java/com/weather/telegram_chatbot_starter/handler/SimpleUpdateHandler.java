@@ -51,13 +51,16 @@ public class SimpleUpdateHandler implements UpdatesListener {
 
 	@Autowired
 	LocationRepo locationRepo;
+	
+	IPersonDAO personDAO;
 
 	ReplyKeyboardMarkup replyKeyboard = showMenu();
 
 	@Override
 	public int process(List<Update> updates) {
-		
+		personDAO = new PersonDAO(personRepo, locationRepo);
 		for (Update update : updates) {
+			
 			Integer chatId = update.message().from().id();
 			String messageText = update.message().text();
 			Integer messageId = update.message().messageId();
@@ -71,8 +74,8 @@ public class SimpleUpdateHandler implements UpdatesListener {
 				case "/start": {
 					
 					Person person = personRepo.findById(chatId);
-					LOGGER.info("Favorite city for user "+getFavoriteLocation(chatId));
-					LOGGER.info("History for user "+getHistoryForUser(chatId));
+					LOGGER.info("Favorite city for user "+personDAO.getFavoriteLocationForUser(chatId));
+					LOGGER.info("History for user "+personDAO.getHistoryForUser(chatId));
 					if (person != null && person.getFirstName() != null) {
 
 						sendMessage = new SendMessage(chatId,
@@ -80,7 +83,7 @@ public class SimpleUpdateHandler implements UpdatesListener {
 										.parseMode(ParseMode.HTML).disableNotification(false)
 										.replyToMessageId(messageId).replyMarkup(replyKeyboard);
 					} else {
-						insertPerson(chatId);
+						personDAO.insertPerson(chatId);
 
 						KeyboardButton contactButton = new KeyboardButton("Share contact details");
 						KeyboardButton denyButton = new KeyboardButton("Deny");
@@ -142,7 +145,7 @@ public class SimpleUpdateHandler implements UpdatesListener {
 				}
 			} else if (userContact != null) {
 
-				insertPerson(userContact);
+				personDAO.insertPerson(userContact);
 
 				KeyboardButton shareLocationButton = new KeyboardButton("Share location");
 				shareLocationButton.requestLocation(true);
@@ -171,16 +174,16 @@ public class SimpleUpdateHandler implements UpdatesListener {
 					e.printStackTrace();
 				}
 
-				insertLocation(location, chatId);
-				//insertFavoriteLocation(location, chatId);
+				personDAO.insertLocation(location, chatId);
+				
 				Weather currentWeather = new Weather();
 
-				// WeatherInfoGather gatherCityWeather = new WeatherInfoGather();
-				// try {
-				// currentWeather = gatherCityWeather.getWeather(location);
-				// } catch (APIException e) {
-				// e.printStackTrace();
-				// }
+				 WeatherInfoGather gatherCityWeather = new WeatherInfoGather();
+				 try {
+				 currentWeather = gatherCityWeather.getWeather(location);
+				 } catch (APIException e) {
+				 e.printStackTrace();
+				 }
 
 				sendMessage = new SendMessage(chatId, "Your location has been saved internally (" + location
 						+ ").\nBelow you can find your location current weather, along the other functionalities menu: \r\n"
@@ -234,115 +237,6 @@ public class SimpleUpdateHandler implements UpdatesListener {
 		return replyKeyboard;
 	}
 
-	private void insertPerson(Contact contact) {
 
-		Person person = new Person();
-		person.setUserId(contact.userId());
-		person.setPhoneNumber(contact.phoneNumber());
-		person.setFirstName(contact.firstName());
-		person.setLastName(contact.lastName());
-
-		personRepo.save(person);
-	}
-
-	private void insertPerson(int chatId) {
-
-		Person person = new Person();
-		person.setUserId(chatId);
-
-		personRepo.save(person);
-	}
-
-	@Transactional
-	private void insertLocation(String location, int userId) {
-		location = "Brasov";
-		Person person = personRepo.findById(userId);
-		if (person != null) {
-			City city = new City();
-			LOGGER.info("Trying to add city");
-			city = locationRepo.findByName(location);
-			//if city is in the database
-			if(city!=null)
-			{
-				LOGGER.info("City is not null "+ city.getId());
-				
-				person.getCity().add(city);
-				
-				personRepo.save(person);
-		
-			}
-			//if city is NOT in the database
-			else {
-				City city2 = new City();
-				city2.setName(location);
-				locationRepo.save(city2);
-				city2 = locationRepo.findByName(location);
-				LOGGER.info("City wasn't in the database "+ city2.getId());
-				person.getCity().add(city2);
-
-				personRepo.save(person);
-			}
-
-			
-
-		}
-
-	}
-	@Transactional
-	private void insertFavoriteLocation(String location, int userId) {
-		//location = "Brasov";
-		Person person = personRepo.findById(userId);
-		if (person != null) {
-			City city= new City();
-			city.setName(location);
-		
-			LOGGER.info("Trying to add favorite city");
-			city = locationRepo.findByName(location);
-			//if city is in the database
-			if(city!=null)
-			{
-				person.setFavoriteCity(city);
-				LOGGER.info("City is not null "+ city.getId());
-				LOGGER.info("Saving favorite city to person ");
-				personRepo.save(person);
-				LOGGER.info("Saved");
-		
-			}
-			//if city is NOT in the database
-			else {
-				City city2 = new City();
-				city2.setName(location);
-				locationRepo.save(city2);
-				city2 = locationRepo.findByName(location);
-				LOGGER.info("City wasn't in the database "+ city2.getId());
-			
-				person.setFavoriteCity(city2);
-				personRepo.save(person);
-			}
-
-			
-
-		}
-
-	}
-	
-	
-	private String getFavoriteLocation( int userId) {
-		//location = "Brasov";
-		Person person = personRepo.findById(userId);
-		if(person!=null && person.getFavoriteCity()!=null) {
-		return person.getFavoriteCity().getName();
-		}
-		return null;
-	}
-	
-	private Set<City> getHistoryForUser( int userId) {
-		//location = "Brasov";
-		Person person = personRepo.findById(userId);
-		if(person!=null && !person.getCity().isEmpty()) {
-		return person.getCity();
-		}
-		return null;
-	}
 
 }
