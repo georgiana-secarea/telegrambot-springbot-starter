@@ -71,7 +71,8 @@ public class SimpleUpdateHandler implements UpdatesListener {
 				case "/start": {
 					
 					Person person = personRepo.findById(chatId);
-					LOGGER.info(getFavoriteLocation(chatId));
+					LOGGER.info("Favorite city for user "+getFavoriteLocation(chatId));
+					LOGGER.info("History for user "+getHistoryForUser(chatId));
 					if (person != null && person.getFirstName() != null) {
 
 						sendMessage = new SendMessage(chatId,
@@ -278,14 +279,7 @@ public class SimpleUpdateHandler implements UpdatesListener {
 				city2 = locationRepo.findByName(location);
 				LOGGER.info("City wasn't in the database "+ city2.getId());
 				person.getCity().add(city2);
-//				Set<City> cities = new HashSet<City>();
-//				if(!person.getCity().isEmpty())
-//				{
-//					cities.addAll(person.getCity());
-//				}
-//				
-//				cities.add(city2);// not going to work for multiple users
-//				person.setCity(cities);
+
 				personRepo.save(person);
 			}
 
@@ -338,6 +332,15 @@ public class SimpleUpdateHandler implements UpdatesListener {
 		Person person = personRepo.findById(userId);
 		if(person!=null && person.getFavoriteCity()!=null) {
 		return person.getFavoriteCity().getName();
+		}
+		return null;
+	}
+	
+	private Set<City> getHistoryForUser( int userId) {
+		//location = "Brasov";
+		Person person = personRepo.findById(userId);
+		if(person!=null && !person.getCity().isEmpty()) {
+		return person.getCity();
 		}
 		return null;
 	}
