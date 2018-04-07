@@ -10,6 +10,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.weather.telegram_chatbot_starter.geocoding.ReverseGeocoding;
 import com.weather.telegram_chatbot_starter.geocoding.WeatherInfoGather;
 import com.weather.telegram_chatbot_starter.model.Person;
@@ -17,6 +19,8 @@ import com.weather.telegram_chatbot_starter.model.Weather;
 import com.weather.telegram_chatbot_starter.model.City;
 import com.weather.telegram_chatbot_starter.repo.LocationRepo;
 import com.weather.telegram_chatbot_starter.repo.PersonRepo;
+import com.weather.telegram_chatbot_starter.dao.IPersonDAO;
+import com.weather.telegram_chatbot_starter.dao.PersonDAO;
 
 import net.aksingh.owmjapis.api.APIException;
 
@@ -41,6 +45,7 @@ public class SimpleUpdateHandler implements UpdatesListener {
 	@Autowired
 	private TelegramBot bot;
 
+
 	@Autowired
 	PersonRepo personRepo;
 
@@ -51,7 +56,7 @@ public class SimpleUpdateHandler implements UpdatesListener {
 
 	@Override
 	public int process(List<Update> updates) {
-
+		
 		for (Update update : updates) {
 			Integer chatId = update.message().from().id();
 			String messageText = update.message().text();
@@ -64,15 +69,15 @@ public class SimpleUpdateHandler implements UpdatesListener {
 			if (messageText != null) {
 				switch (messageText) {
 				case "/start": {
-
-					Optional<Person> person = personRepo.findById(chatId);
-					if (person.isPresent() && person.get().getFirstName() != null) {
+					
+					Person person = personRepo.findById(chatId);
+					LOGGER.info(getFavoriteLocation(chatId));
+					if (person != null && person.getFirstName() != null) {
 
 						sendMessage = new SendMessage(chatId,
-								"Welcome back, " + person.get().getFirstName() + " " + person.get().getLastName()
-										+ ".What would you wish to check?").parseMode(ParseMode.HTML)
-												.disableNotification(false).replyToMessageId(messageId)
-												.replyMarkup(replyKeyboard);
+								"Welcome back, " + person.getFirstName() + " " + ".What would you wish to check?")
+										.parseMode(ParseMode.HTML).disableNotification(false)
+										.replyToMessageId(messageId).replyMarkup(replyKeyboard);
 					} else {
 						insertPerson(chatId);
 
@@ -166,15 +171,15 @@ public class SimpleUpdateHandler implements UpdatesListener {
 				}
 
 				insertLocation(location, chatId);
-
+				//insertFavoriteLocation(location, chatId);
 				Weather currentWeather = new Weather();
 
-				WeatherInfoGather gatherCityWeather = new WeatherInfoGather();
-				try {
-					currentWeather = gatherCityWeather.getWeather(location);
-				} catch (APIException e) {
-					e.printStackTrace();
-				}
+				// WeatherInfoGather gatherCityWeather = new WeatherInfoGather();
+				// try {
+				// currentWeather = gatherCityWeather.getWeather(location);
+				// } catch (APIException e) {
+				// e.printStackTrace();
+				// }
 
 				sendMessage = new SendMessage(chatId, "Your location has been saved internally (" + location
 						+ ").\nBelow you can find your location current weather, along the other functionalities menu: \r\n"
@@ -247,18 +252,94 @@ public class SimpleUpdateHandler implements UpdatesListener {
 		personRepo.save(person);
 	}
 
+	@Transactional
 	private void insertLocation(String location, int userId) {
+		location = "Brasov";
+		Person person = personRepo.findById(userId);
+		if (person != null) {
+			City city = new City();
+			LOGGER.info("Trying to add city");
+			city = locationRepo.findByName(location);
+			//if city is in the database
+			if(city!=null)
+			{
+				LOGGER.info("City is not null "+ city.getId());
+				
+				person.getCity().add(city);
+				
+				personRepo.save(person);
+		
+			}
+			//if city is NOT in the database
+			else {
+				City city2 = new City();
+				city2.setName(location);
+				locationRepo.save(city2);
+				city2 = locationRepo.findByName(location);
+				LOGGER.info("City wasn't in the database "+ city2.getId());
+				person.getCity().add(city2);
+//				Set<City> cities = new HashSet<City>();
+//				if(!person.getCity().isEmpty())
+//				{
+//					cities.addAll(person.getCity());
+//				}
+//				
+//				cities.add(city2);// not going to work for multiple users
+//				person.setCity(cities);
+				personRepo.save(person);
+			}
 
-		Optional<Person> person = personRepo.findById(userId);
-		Set<Person> persons = new HashSet<Person>();
+			
 
-		if (Optional.empty() != null) {
-			persons.add(person.get());
-			locationRepo.save(new City(location, persons));
-		} else {
-			LOGGER.info("No user found");
 		}
 
+	}
+	@Transactional
+	private void insertFavoriteLocation(String location, int userId) {
+		//location = "Brasov";
+		Person person = personRepo.findById(userId);
+		if (person != null) {
+			City city= new City();
+			city.setName(location);
+		
+			LOGGER.info("Trying to add favorite city");
+			city = locationRepo.findByName(location);
+			//if city is in the database
+			if(city!=null)
+			{
+				person.setFavoriteCity(city);
+				LOGGER.info("City is not null "+ city.getId());
+				LOGGER.info("Saving favorite city to person ");
+				personRepo.save(person);
+				LOGGER.info("Saved");
+		
+			}
+			//if city is NOT in the database
+			else {
+				City city2 = new City();
+				city2.setName(location);
+				locationRepo.save(city2);
+				city2 = locationRepo.findByName(location);
+				LOGGER.info("City wasn't in the database "+ city2.getId());
+			
+				person.setFavoriteCity(city2);
+				personRepo.save(person);
+			}
+
+			
+
+		}
+
+	}
+	
+	
+	private String getFavoriteLocation( int userId) {
+		//location = "Brasov";
+		Person person = personRepo.findById(userId);
+		if(person!=null && person.getFavoriteCity()!=null) {
+		return person.getFavoriteCity().getName();
+		}
+		return null;
 	}
 
 }

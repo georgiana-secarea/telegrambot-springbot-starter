@@ -30,10 +30,10 @@ public class PersonServiceImpl implements PersonService{
 		@Override
 		@Transactional
 		public PersonDto addNewOrGetExisting(int id) {
-			Optional<Person> person = personRepo.findById(id);
-			if (person.isPresent()) {
+			Person person = personRepo.findById(id);
+			if (person!=null) {
 				LOGGER.info(() -> String.format("The person with id %s is allready present",id));
-				return toPersonDto(person.get());
+				return toPersonDto(person);
 			} else {
 				LOGGER.info(() -> String.format("The person with id %s is not present",id));
 				Person person2 = new Person();
@@ -52,10 +52,10 @@ public class PersonServiceImpl implements PersonService{
 		@Override
 		@Transactional
 		public PersonDto addNewOrGetExisting(int id, String phoneNumber) {
-			Optional<Person> person = personRepo.findById(id);
-			if (person.isPresent()) {
+			Person person = personRepo.findById(id);
+			if (person!=null) {
 				LOGGER.info(() -> String.format("The person with id %s is allready present",id));
-				return toPersonDto(person.get());
+				return toPersonDto(person);
 			} else {
 				LOGGER.info(() -> String.format("The person with id %s is not present",id));
 				Person person2 = new Person();

@@ -9,7 +9,7 @@ import com.weather.telegram_chatbot_starter.model.Person;
 
 public interface PersonRepo extends JpaRepository<Person, Long>{
 
-	Optional<Person> findById(int id);
+	Person findById(int id);
 	
 	Optional<Person> findByPhoneNumber(String phone);
 }
