@@ -2,6 +2,7 @@ package com.weather.telegram_chatbot_starter.handler;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -75,7 +76,7 @@ public class SimpleUpdateHandler implements UpdatesListener {
 					
 					Person person = personRepo.findById(chatId);
 					LOGGER.info("Favorite city for user "+personDAO.getFavoriteLocationForUser(chatId));
-					LOGGER.info("History for user "+personDAO.getHistoryForUser(chatId));
+					
 					if (person != null && person.getFirstName() != null) {
 
 						sendMessage = new SendMessage(chatId,
@@ -126,20 +127,34 @@ public class SimpleUpdateHandler implements UpdatesListener {
 					break;
 				}
 				case "My search list history": {
-
-					sendMessage = new SendMessage(chatId, "You may find your search history below:")
-							.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
+					
+					Set<City> cities = personDAO.getHistoryForUser(chatId);
+					String concatCity="";
+					for(City c: cities) {
+						LOGGER.info(c.getName());
+						concatCity +=c.getName()+" ;";
+					}
+					sendMessage = new SendMessage(chatId, "You may find your search history below:"+concatCity)
+							.parseMode(ParseMode.HTML)
+							.disableWebPagePreview(true)
+							.disableNotification(true)
+							.replyToMessageId(messageId)
 							.replyMarkup(new ForceReply());
 					break;
 				}
 				case "App credits": {
-					sendMessage = new SendMessage(chatId, "WIP").parseMode(ParseMode.HTML).disableNotification(false)
-							.replyToMessageId(messageId).replyMarkup(new ForceReply());
+					sendMessage = new SendMessage(chatId, "WIP")
+							.parseMode(ParseMode.HTML)
+							.disableNotification(false)
+							.replyToMessageId(messageId)
+							.replyMarkup(new ForceReply());
 					break;
 				}
 				default: {
-					sendMessage = new SendMessage(chatId, "How may I be at your service?").parseMode(ParseMode.HTML)
-							.disableNotification(false).replyToMessageId(messageId).replyMarkup(new ForceReply());
+					sendMessage = new SendMessage(chatId, "How may I be at your service?")
+							.parseMode(ParseMode.HTML)
+							.disableNotification(false).replyToMessageId(messageId)
+							.replyMarkup(new ForceReply());
 					break;
 				}
 				}
@@ -220,7 +235,7 @@ public class SimpleUpdateHandler implements UpdatesListener {
 		final KeyboardButton otherLocationForecast = new KeyboardButton("Weather forecast for another location");
 
 		final KeyboardButton userSearchHistory = new KeyboardButton("My search list history");
-		userSearchHistory.requestContact(true);
+		//userSearchHistory.requestContact(true);
 
 		final KeyboardButton appCredits = new KeyboardButton("App credits");
 

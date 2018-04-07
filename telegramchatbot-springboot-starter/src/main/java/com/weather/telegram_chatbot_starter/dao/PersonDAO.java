@@ -154,6 +154,11 @@ public class PersonDAO implements IPersonDAO{
 		
 		Person person = personRepo.findById(userId);
 		if(person!=null && !person.getCity().isEmpty()) {
+			String concatCity="";
+			for(City c: person.getCity()) {
+				LOGGER.info("------------------"+c.getName());
+				
+			}
 		return person.getCity();
 		}
 		return null;
