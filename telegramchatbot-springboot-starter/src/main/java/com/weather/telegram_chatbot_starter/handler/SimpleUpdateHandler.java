@@ -1,10 +1,7 @@
 package com.weather.telegram_chatbot_starter.handler;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
@@ -54,11 +51,17 @@ public class SimpleUpdateHandler implements UpdatesListener {
 
 	IPersonDAO personDAO;
 
-	ReplyKeyboardMarkup replyKeyboard = showMenu();
+	String locationStr = "";
+
+	ReverseGeocoding revGeo = new ReverseGeocoding();
+
+	HandlerUtils handlerUtils = new HandlerUtils();
 
 	@Override
 	public int process(List<Update> updates) {
+
 		personDAO = new PersonDAO(personRepo, locationRepo);
+
 		for (Update update : updates) {
 			Integer chatId = update.message().from().id();
 			String messageText = update.message().text();
@@ -70,82 +73,47 @@ public class SimpleUpdateHandler implements UpdatesListener {
 
 			if (messageText != null) {
 				if (messageText.startsWith("/fav ")) {
-
 					String[] inputLocation = messageText.split("/fav ", 2);
 					String favLocation = inputLocation[1];
 
-					try {
+					personDAO.insertFavoriteLocation(favLocation, chatId);
 
-						Weather currentWeather = new Weather();
+					sendMessage = handlerUtils.processWeather(chatId, messageId, favLocation);
 
-						WeatherInfoGather gatherCityWeather = new WeatherInfoGather();
-
-						currentWeather = gatherCityWeather.getCurrentWeather(favLocation);
-
-						personDAO.insertFavoriteLocation(favLocation, chatId);
-
-						sendMessage = new SendMessage(chatId,
-								"Your location has been saved internally for notification purposes (" + inputLocation[1]
-										+ ").\nBy the way, since you were probably too busy looking at your phone, here is some weather information about your location: "
-										+ currentWeather).parseMode(ParseMode.HTML).disableNotification(false)
-												.replyToMessageId(messageId).replyMarkup(showMenu());
-					} catch (APIException e) {
-						sendMessage = new SendMessage(chatId,
-								"Your location could not be processed. Please make sure you enter a valid one!")
-										.parseMode(ParseMode.HTML).disableNotification(false)
-										.replyToMessageId(messageId).replyMarkup(new ForceReply());
-					}
 				} else if (messageText.startsWith("/loc ")) {
 					String[] inputLocation = messageText.split("/loc ", 2);
+					locationStr = inputLocation[1];
 
-					String locationStr = inputLocation[1];
+					personDAO.insertLocation(locationStr, chatId);
 
-					sendMessage = processWeatherAndForecast(chatId, messageId, locationStr);
+					sendMessage = handlerUtils.processWeather(chatId, messageId, locationStr);
 				} else {
 					switch (messageText) {
 					case "/start": {
-
 						Person person = personRepo.findById(chatId);
-						LOGGER.info("Favorite city for user " + personDAO.getFavoriteLocationForUser(chatId));
+
 						if (person != null && person.getFirstName() != null) {
 
 							sendMessage = new SendMessage(chatId,
 									"Welcome back, " + person.getFirstName() + " " + person.getLastName()
 											+ ". What would you wish to check?").parseMode(ParseMode.HTML)
 													.disableNotification(false).replyToMessageId(messageId)
-													.replyMarkup(showMenu());
+													.replyMarkup(handlerUtils.showMainMenu());
 						} else {
 							personDAO.insertPerson(chatId);
 
-							KeyboardButton contactButton = new KeyboardButton("Share contact details");
-							KeyboardButton denyButton = new KeyboardButton("Deny");
-							contactButton.requestContact(true);
-
-							KeyboardButton[][] buttonsList = new KeyboardButton[1][2];
-							buttonsList[0][0] = contactButton;
-							buttonsList[0][1] = denyButton;
-
-							ReplyKeyboardMarkup contactReplyKeyboard = new ReplyKeyboardMarkup(buttonsList);
-							contactReplyKeyboard.resizeKeyboard(true);
-							contactReplyKeyboard.oneTimeKeyboard(true);
-
-							sendMessage = new SendMessage(chatId,
-									"Hi, I'm WeatherBOT. To receive daily notifications of your favorite location weather, please share your name, phone number and location.")
-											.parseMode(ParseMode.HTML).disableNotification(false)
-											.replyToMessageId(messageId).replyMarkup(contactReplyKeyboard);
+							sendMessage = handlerUtils.shareDetailsMenu(chatId, messageId);
 						}
 						break;
 					}
 
 					case "Deny": {
-
 						sendMessage = new SendMessage(chatId, "Alright, got it. Now, what would you wish to know?")
 								.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
-								.replyMarkup(replyKeyboard);
+								.replyMarkup(handlerUtils.showMainMenu());
 						break;
 					}
 					case "Another location weather information": {
-
 						sendMessage = new SendMessage(chatId,
 								"Please choose your location first, by using the format /loc yourLocation")
 										.parseMode(ParseMode.HTML).disableNotification(false)
@@ -154,27 +122,28 @@ public class SimpleUpdateHandler implements UpdatesListener {
 					}
 					case "My search list history": {
 						Set<City> cities = personDAO.getHistoryForUser(chatId);
-						String citiesList = "";
-						if (cities != null && !cities.isEmpty()) {
-							for (City c : cities) {
-								citiesList = citiesList.concat(c.getName() + " | ");
-							}
-							sendMessage = new SendMessage(chatId,
-									"Your search list history is the following one: " + citiesList)
-											.parseMode(ParseMode.HTML).disableWebPagePreview(true)
-											.disableNotification(true).replyToMessageId(messageId)
-											.replyMarkup(new ForceReply());
-						} else {
-							sendMessage = new SendMessage(chatId, "You didn't search any location until now!")
-									.parseMode(ParseMode.HTML).disableWebPagePreview(true).disableNotification(true)
-									.replyToMessageId(messageId).replyMarkup(new ForceReply());
-						}
+
+						sendMessage = handlerUtils.retrieveUserSearchHistory(chatId, messageId, cities);
 
 						break;
 					}
+					case "Show forecast": {
+						sendMessage = handlerUtils.processForecast(chatId, messageId, locationStr);
+
+						break;
+					}
+					case "Go back to menu": {
+						sendMessage = new SendMessage(chatId, "Below you can find the main menu.")
+								.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
+								.replyMarkup(handlerUtils.showMainMenu());
+						break;
+					}
 					case "App credits": {
-						sendMessage = new SendMessage(chatId, "WIP").parseMode(ParseMode.HTML)
-								.disableNotification(false).replyToMessageId(messageId).replyMarkup(new ForceReply());
+						sendMessage = new SendMessage(chatId,
+								"Developers: Georgiana Secarea and Mircea Stan\n "
+										+ "Special thanks to Vlad for his continuous support throughout this project!")
+												.parseMode(ParseMode.HTML).disableNotification(false)
+												.replyToMessageId(messageId).replyMarkup(new ForceReply());
 						break;
 					}
 					default: {
@@ -185,19 +154,16 @@ public class SimpleUpdateHandler implements UpdatesListener {
 					}
 				}
 			} else if (userContact != null) {
-
 				personDAO.insertPerson(userContact);
 
-				sendMessage = new SendMessage(chatId,
-						"Your contact details have been saved internally (" + userContact.phoneNumber()
-								+ ").\nNow please enter your location using the format \"/fav yourLocation\"")
-										.parseMode(ParseMode.HTML).disableNotification(false)
-										.replyToMessageId(messageId).replyMarkup(new ForceReply());
+				sendMessage = new SendMessage(chatId, "Your contact details have been saved internally ("
+						+ userContact.phoneNumber()
+						+ ").\nNow please enter your favorite location where you want your notifications to be received"
+						+ ", using the format \"/fav yourLocation\"").parseMode(ParseMode.HTML)
+								.disableNotification(false).replyToMessageId(messageId).replyMarkup(new ForceReply());
 			} else if (userLocation != null) {
-
 				String location = "Not available";
 
-				ReverseGeocoding revGeo = new ReverseGeocoding();
 				try {
 					location = revGeo.getCity(userLocation.latitude(), userLocation.longitude());
 
@@ -205,7 +171,9 @@ public class SimpleUpdateHandler implements UpdatesListener {
 					e.printStackTrace();
 				}
 
-				sendMessage = processWeatherAndForecast(chatId, messageId, location);
+				personDAO.insertLocation(location, chatId);
+
+				sendMessage = handlerUtils.processWeather(chatId, messageId, location);
 
 			} else {
 				sendMessage = new SendMessage(chatId, "How may I be at your service?").parseMode(ParseMode.HTML)
@@ -216,110 +184,6 @@ public class SimpleUpdateHandler implements UpdatesListener {
 		}
 
 		return UpdatesListener.CONFIRMED_UPDATES_ALL;
-
 	}
-
-	private SendMessage processWeatherAndForecast(Integer chatId, Integer messageId, String locationStr) {
-
-		personDAO.insertLocation(locationStr, chatId);
-
-		WeatherInfoGather gatherCityWeather = new WeatherInfoGather();
-		SendMessage sendMessage;
-		Weather currentWeather;
-		List<Forecast> forecast;
-		try {
-
-			if (locationStr != null) {
-				currentWeather = gatherCityWeather.getCurrentWeather(locationStr);
-
-				forecast = gatherCityWeather.getForecast(locationStr);
-
-				sendMessage = new SendMessage(chatId,
-						"Your location has been saved internally in case you want to check your search history ("
-								+ locationStr + ").\n\nBelow you have the current weather information: \n"
-								+ currentWeather + "\n\n").parseMode(ParseMode.HTML).disableNotification(false)
-										.replyToMessageId(messageId).replyMarkup(new ForceReply());
-
-				bot.execute(sendMessage);
-
-				String displayForecast = "";
-				if (!forecast.isEmpty()) {
-					for (Forecast currentHourForecast : forecast)
-						displayForecast = displayForecast.concat(currentHourForecast.toString());
-				}
-				sendMessage = new SendMessage(chatId,
-						"You may also find the next 3 days forecast below: \n" + displayForecast)
-								.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
-								.replyMarkup(new ForceReply());
-			} else
-				sendMessage = new SendMessage(chatId,
-						"You must enter the required format to receive the weather information!")
-								.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
-								.replyMarkup(new ForceReply());
-		} catch (APIException e) {
-			sendMessage = new SendMessage(chatId,
-					"Your location could not be processed. Please make sure you enter a valid one!")
-							.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
-							.replyMarkup(new ForceReply());
-		}
-		return sendMessage;
-	}
-
-	/**
-	 * This is a menu with the core features of this WeatherBOT
-	 * 
-	 * @return
-	 */
-	private ReplyKeyboardMarkup showMenu() {
-
-		final KeyboardButton currentLocationWeather = new KeyboardButton("Current location weather information");
-		currentLocationWeather.requestLocation(true);
-
-		final KeyboardButton otherLocationWeather = new KeyboardButton("Another location weather information");
-
-		final KeyboardButton userSearchHistory = new KeyboardButton("My search list history");
-
-		final KeyboardButton appCredits = new KeyboardButton("App credits");
-
-		final KeyboardButton[][] buttonsList = new KeyboardButton[2][2];
-		buttonsList[0][0] = currentLocationWeather;
-		buttonsList[0][1] = otherLocationWeather;
-		buttonsList[1][0] = userSearchHistory;
-		buttonsList[1][1] = appCredits;
-
-		final ReplyKeyboardMarkup replyKeyboard = new ReplyKeyboardMarkup(buttonsList);
-		replyKeyboard.resizeKeyboard(true);
-		replyKeyboard.oneTimeKeyboard(true);
-		return replyKeyboard;
-	}
-
-	// /**
-	// * This is an inline keyboard markup, that allows the user to check what
-	// weather
-	// * information is desired
-	// *
-	// * @return
-	// */
-	// private ReplyKeyboardMarkup showWeatherTypes() {
-	//
-	// final KeyboardButton currentLocationWeather = new KeyboardButton("Current
-	// weather");
-	//
-	// final KeyboardButton currentLocationForecast = new
-	// KeyboardButton("Forecast");
-	//
-	// final KeyboardButton cancelRequest = new KeyboardButton("Cancel");
-	//
-	// final KeyboardButton[][] buttonsList = new KeyboardButton[1][3];
-	// buttonsList[0][0] = currentLocationWeather;
-	// buttonsList[0][1] = currentLocationForecast;
-	// buttonsList[0][2] = cancelRequest;
-	//
-	// final ReplyKeyboardMarkup replyKeyboard = new
-	// ReplyKeyboardMarkup(buttonsList);
-	// replyKeyboard.resizeKeyboard(true);
-	// replyKeyboard.oneTimeKeyboard(true);
-	// return replyKeyboard;
-	// }
 
 }
