@@ -1,6 +1,5 @@
 package com.weather.telegram_chatbot_starter.impl;
 
-import java.util.Optional;
 
 import javax.transaction.Transactional;
 
@@ -10,9 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
-import com.weather.telegram_chatbot_starter.dto.BasicInfoDto;
 import com.weather.telegram_chatbot_starter.dto.PersonDto;
-import com.weather.telegram_chatbot_starter.model.BasicInfo;
 import com.weather.telegram_chatbot_starter.model.Person;
 import com.weather.telegram_chatbot_starter.repo.PersonRepo;
 import com.weather.telegram_chatbot_starter.service.PersonService;
@@ -30,10 +27,10 @@ public class PersonServiceImpl implements PersonService{
 		@Override
 		@Transactional
 		public PersonDto addNewOrGetExisting(int id) {
-			Optional<Person> person = personRepo.findById(id);
-			if (person.isPresent()) {
+			Person person = personRepo.findById(id);
+			if (person!=null) {
 				LOGGER.info(() -> String.format("The person with id %s is allready present",id));
-				return toPersonDto(person.get());
+				return toPersonDto(person);
 			} else {
 				LOGGER.info(() -> String.format("The person with id %s is not present",id));
 				Person person2 = new Person();
@@ -52,10 +49,10 @@ public class PersonServiceImpl implements PersonService{
 		@Override
 		@Transactional
 		public PersonDto addNewOrGetExisting(int id, String phoneNumber) {
-			Optional<Person> person = personRepo.findById(id);
-			if (person.isPresent()) {
+			Person person = personRepo.findById(id);
+			if (person!=null) {
 				LOGGER.info(() -> String.format("The person with id %s is allready present",id));
-				return toPersonDto(person.get());
+				return toPersonDto(person);
 			} else {
 				LOGGER.info(() -> String.format("The person with id %s is not present",id));
 				Person person2 = new Person();

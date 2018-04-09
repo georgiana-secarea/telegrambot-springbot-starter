@@ -13,9 +13,12 @@ import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
 
+
 @Entity
 @Table(name = "CITY", schema = "public")
 public class City {
+
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "ID")
@@ -36,19 +39,19 @@ public class City {
 
 	}
 
-	public long getId() {
+	public Long getId() {
 		return id;
 	}
 
-	public void setId(long id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 
-	public String getCity() {
+	public String getName() {
 		return name;
 	}
 
-	public void setCity(String city) {
+	public void setName(String city) {
 		this.name = city;
 	}
 
@@ -59,5 +62,6 @@ public class City {
 	public void setPersons(Set<Person> persons) {
 		this.persons = persons;
 	}
+	
 
 }

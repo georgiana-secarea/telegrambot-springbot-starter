@@ -11,6 +11,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.weather.telegram_chatbot_starter.dao.IPersonDAO;
+import com.weather.telegram_chatbot_starter.dao.PersonDAO;
 import com.weather.telegram_chatbot_starter.geocoding.ReverseGeocoding;
 import com.weather.telegram_chatbot_starter.geocoding.WeatherInfoGather;
 import com.weather.telegram_chatbot_starter.model.Person;
@@ -49,11 +52,13 @@ public class SimpleUpdateHandler implements UpdatesListener {
 	@Autowired
 	LocationRepo locationRepo;
 
+	IPersonDAO personDAO;
+
 	ReplyKeyboardMarkup replyKeyboard = showMenu();
 
 	@Override
 	public int process(List<Update> updates) {
-
+		personDAO = new PersonDAO(personRepo, locationRepo);
 		for (Update update : updates) {
 			Integer chatId = update.message().from().id();
 			String messageText = update.message().text();
@@ -67,6 +72,7 @@ public class SimpleUpdateHandler implements UpdatesListener {
 				if (messageText.startsWith("/fav ")) {
 
 					String[] inputLocation = messageText.split("/fav ", 2);
+					String favLocation = inputLocation[1];
 
 					try {
 
@@ -74,7 +80,9 @@ public class SimpleUpdateHandler implements UpdatesListener {
 
 						WeatherInfoGather gatherCityWeather = new WeatherInfoGather();
 
-						currentWeather = gatherCityWeather.getCurrentWeather(inputLocation[1]);
+						currentWeather = gatherCityWeather.getCurrentWeather(favLocation);
+
+						personDAO.insertFavoriteLocation(favLocation, chatId);
 
 						sendMessage = new SendMessage(chatId,
 								"Your location has been saved internally for notification purposes (" + inputLocation[1]
@@ -92,24 +100,22 @@ public class SimpleUpdateHandler implements UpdatesListener {
 
 					String locationStr = inputLocation[1];
 
-					Weather currentWeather = new Weather();
-					List<Forecast> forecast = new ArrayList<Forecast>();
-
 					sendMessage = processWeatherAndForecast(chatId, messageId, locationStr);
 				} else {
 					switch (messageText) {
 					case "/start": {
 
-						Optional<Person> person = personRepo.findById(chatId);
-						if (person.isPresent() && person.get().getFirstName() != null) {
+						Person person = personRepo.findById(chatId);
+						LOGGER.info("Favorite city for user " + personDAO.getFavoriteLocationForUser(chatId));
+						if (person != null && person.getFirstName() != null) {
 
 							sendMessage = new SendMessage(chatId,
-									"Welcome back, " + person.get().getFirstName() + " " + person.get().getLastName()
-											+ ".What would you wish to check?").parseMode(ParseMode.HTML)
+									"Welcome back, " + person.getFirstName() + " " + person.getLastName()
+											+ ". What would you wish to check?").parseMode(ParseMode.HTML)
 													.disableNotification(false).replyToMessageId(messageId)
 													.replyMarkup(showMenu());
 						} else {
-							insertPerson(chatId);
+							personDAO.insertPerson(chatId);
 
 							KeyboardButton contactButton = new KeyboardButton("Share contact details");
 							KeyboardButton denyButton = new KeyboardButton("Deny");
@@ -147,10 +153,23 @@ public class SimpleUpdateHandler implements UpdatesListener {
 						break;
 					}
 					case "My search list history": {
+						Set<City> cities = personDAO.getHistoryForUser(chatId);
+						String citiesList = "";
+						if (cities != null && !cities.isEmpty()) {
+							for (City c : cities) {
+								citiesList = citiesList.concat(c.getName() + " | ");
+							}
+							sendMessage = new SendMessage(chatId,
+									"Your search list history is the following one: " + citiesList)
+											.parseMode(ParseMode.HTML).disableWebPagePreview(true)
+											.disableNotification(true).replyToMessageId(messageId)
+											.replyMarkup(new ForceReply());
+						} else {
+							sendMessage = new SendMessage(chatId, "You didn't search any location until now!")
+									.parseMode(ParseMode.HTML).disableWebPagePreview(true).disableNotification(true)
+									.replyToMessageId(messageId).replyMarkup(new ForceReply());
+						}
 
-						sendMessage = new SendMessage(chatId, "You may find your search history below:")
-								.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
-								.replyMarkup(new ForceReply());
 						break;
 					}
 					case "App credits": {
@@ -167,7 +186,7 @@ public class SimpleUpdateHandler implements UpdatesListener {
 				}
 			} else if (userContact != null) {
 
-				insertPerson(userContact);
+				personDAO.insertPerson(userContact);
 
 				sendMessage = new SendMessage(chatId,
 						"Your contact details have been saved internally (" + userContact.phoneNumber()
@@ -202,7 +221,7 @@ public class SimpleUpdateHandler implements UpdatesListener {
 
 	private SendMessage processWeatherAndForecast(Integer chatId, Integer messageId, String locationStr) {
 
-		insertLocation(locationStr, chatId);
+		personDAO.insertLocation(locationStr, chatId);
 
 		WeatherInfoGather gatherCityWeather = new WeatherInfoGather();
 		SendMessage sendMessage;
@@ -259,7 +278,6 @@ public class SimpleUpdateHandler implements UpdatesListener {
 		final KeyboardButton otherLocationWeather = new KeyboardButton("Another location weather information");
 
 		final KeyboardButton userSearchHistory = new KeyboardButton("My search list history");
-		userSearchHistory.requestContact(true);
 
 		final KeyboardButton appCredits = new KeyboardButton("App credits");
 
@@ -303,38 +321,5 @@ public class SimpleUpdateHandler implements UpdatesListener {
 	// replyKeyboard.oneTimeKeyboard(true);
 	// return replyKeyboard;
 	// }
-
-	private void insertPerson(Contact contact) {
-
-		Person person = new Person();
-		person.setUserId(contact.userId());
-		person.setPhoneNumber(contact.phoneNumber());
-		person.setFirstName(contact.firstName());
-		person.setLastName(contact.lastName());
-
-		personRepo.save(person);
-	}
-
-	private void insertPerson(int chatId) {
-
-		Person person = new Person();
-		person.setUserId(chatId);
-
-		personRepo.save(person);
-	}
-
-	private void insertLocation(String location, int userId) {
-
-		Optional<Person> person = personRepo.findById(userId);
-		Set<Person> persons = new HashSet<Person>();
-
-		if (Optional.empty() != null) {
-			persons.add(person.get());
-			locationRepo.save(new City(location, persons));
-		} else {
-			LOGGER.info("No user found");
-		}
-
-	}
 
 }
