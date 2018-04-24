@@ -9,7 +9,6 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
@@ -31,21 +30,20 @@ public class Person {
 	private String lastName;
 
 	@ManyToMany(fetch = FetchType.EAGER)
-	private Set<City> city=new HashSet<City>();
+	private Set<City> city = new HashSet<City>();
 
 	@OneToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "favorite_city_id")
 	private City favoriteCity;
 
 	public Person(String phone) {
-	
+
 		phoneNumber = phone;
 	}
 
 	public Person() {
-		
+
 	}
-	
 
 	public String getPhoneNumber() {
 		return phoneNumber;

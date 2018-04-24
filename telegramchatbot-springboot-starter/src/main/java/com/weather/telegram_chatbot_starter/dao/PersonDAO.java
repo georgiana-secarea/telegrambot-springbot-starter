@@ -99,7 +99,6 @@ public class PersonDAO implements IPersonDAO {
 	@Override
 	@Transactional
 	public void insertFavoriteLocation(String location, int userId) {
-		// location = "Brasov";
 		Person person = personRepo.findById(userId);
 		if (person != null) {
 			City city = new City();

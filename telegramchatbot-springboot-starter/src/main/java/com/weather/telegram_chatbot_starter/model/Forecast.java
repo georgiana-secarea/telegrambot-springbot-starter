@@ -3,11 +3,29 @@ package com.weather.telegram_chatbot_starter.model;
 public class Forecast {
 
 	public String time;
-	public Double temperature;
+	public Double minTemp;
+	public Double avgTemp;
+	public Double maxTemp;
 	public String description;
 	public Double pressure;
 	public Double humidity;
 	public Double rainfall;
+
+	public Double getMinTemp() {
+		return minTemp;
+	}
+
+	public void setMinTemp(Double minTemp) {
+		this.minTemp = minTemp;
+	}
+
+	public Double getMaxTemp() {
+		return maxTemp;
+	}
+
+	public void setMaxTemp(Double maxTemp) {
+		this.maxTemp = maxTemp;
+	}
 
 	public String getTime() {
 		return time;
@@ -25,12 +43,12 @@ public class Forecast {
 		this.rainfall = rainfall;
 	}
 
-	public Double getTemperature() {
-		return temperature;
+	public Double getAvgTemp() {
+		return avgTemp;
 	}
 
-	public void setTemperature(Double temperature) {
-		this.temperature = temperature;
+	public void setAvgTemp(Double temp) {
+		this.avgTemp = temp;
 	}
 
 	public String getDescription() {
@@ -59,9 +77,11 @@ public class Forecast {
 
 	@Override
 	public String toString() {
-		return "Time: " + time + " | Temperature: " + String.format("%.2f", temperature) + "°C | Description: "
-				+ description + " | Pressure: " + pressure + " HPA | Humidity: " + humidity + "% | Rainfall: "
-				+ rainfall + "% | \n\n";
+		return "Average Temperature: " + String.format("%.2f", avgTemp) + "°C | Minimum Temperature: "
+				+ String.format("%.2f", minTemp) + "°C | Maximum Temperature: " + String.format("%.2f", maxTemp)
+				+ "°C | Description: " + description + " | Pressure: " + String.format("%.2f", pressure)
+				+ " HPA | Humidity: " + String.format("%.2f", humidity) + "% | Rainfall: "
+				+ String.format("%.2f", rainfall) + "% \n\n";
 	}
 
 }

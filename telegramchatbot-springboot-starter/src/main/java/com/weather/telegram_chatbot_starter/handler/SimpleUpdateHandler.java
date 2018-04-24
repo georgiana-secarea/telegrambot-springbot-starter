@@ -12,15 +12,10 @@ import org.springframework.stereotype.Service;
 import com.weather.telegram_chatbot_starter.dao.IPersonDAO;
 import com.weather.telegram_chatbot_starter.dao.PersonDAO;
 import com.weather.telegram_chatbot_starter.geocoding.ReverseGeocoding;
-import com.weather.telegram_chatbot_starter.geocoding.WeatherInfoGather;
 import com.weather.telegram_chatbot_starter.model.Person;
-import com.weather.telegram_chatbot_starter.model.Weather;
 import com.weather.telegram_chatbot_starter.model.City;
-import com.weather.telegram_chatbot_starter.model.Forecast;
 import com.weather.telegram_chatbot_starter.repo.LocationRepo;
 import com.weather.telegram_chatbot_starter.repo.PersonRepo;
-
-import net.aksingh.owmjapis.api.APIException;
 
 import com.google.maps.errors.ApiException;
 import com.pengrad.telegrambot.TelegramBot;
@@ -29,9 +24,7 @@ import com.pengrad.telegrambot.model.Contact;
 import com.pengrad.telegrambot.model.Location;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.request.ForceReply;
-import com.pengrad.telegrambot.model.request.KeyboardButton;
 import com.pengrad.telegrambot.model.request.ParseMode;
-import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
 import com.pengrad.telegrambot.request.SendMessage;
 
 @Service

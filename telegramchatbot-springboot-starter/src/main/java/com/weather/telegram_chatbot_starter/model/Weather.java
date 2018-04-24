@@ -7,6 +7,7 @@ public class Weather {
 	private Double pressure;
 	private Double humidity;
 	private Double rainfall;
+	private String advice;
 
 	public Double getRainfall() {
 		return rainfall;
@@ -48,11 +49,19 @@ public class Weather {
 		this.humidity = humidity;
 	}
 
+	public String getAdvice() {
+		return advice;
+	}
+
+	public void setAdvice(String advice) {
+		this.advice = advice;
+	}
+
 	@Override
 	public String toString() {
 		return "\r\nTemperature: " + String.format("%.2f", temperature) + "°C \r\n Description: " + description
 				+ " \r\n Rainfall: " + rainfall + "% \r\n Pressure: " + pressure + " HPA \r\n Humidity: " + humidity
-				+ "%";
+				+ "%" + " \r\n " + advice;
 	}
 
 }

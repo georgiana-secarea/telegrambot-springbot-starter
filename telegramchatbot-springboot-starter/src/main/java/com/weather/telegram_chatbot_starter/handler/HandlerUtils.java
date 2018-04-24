@@ -155,9 +155,9 @@ public class HandlerUtils {
 					for (Forecast currentHourForecast : forecast)
 						displayForecast = displayForecast.concat(currentHourForecast.toString());
 				}
-				sendMessage = new SendMessage(chatId, "Below is the forecast for the next 3 days: \n" + displayForecast)
-						.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
-						.replyMarkup(showMainMenu());
+				sendMessage = new SendMessage(chatId,
+						"Below is the forecast for the upcoming days: \n" + displayForecast).parseMode(ParseMode.HTML)
+								.disableNotification(false).replyToMessageId(messageId).replyMarkup(showMainMenu());
 			} else
 				sendMessage = new SendMessage(chatId,
 						"You must enter the required format to receive the weather information!")

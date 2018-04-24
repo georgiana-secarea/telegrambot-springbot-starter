@@ -14,16 +14,17 @@ public interface IPersonDAO {
 
 	public Person getPerson(int rollNo);
 
-	public void insertPerson(Contact contact) ;
-	
-	public void insertPerson(int chatId) ;
-	
+	public void insertPerson(Contact contact);
+
+	public void insertPerson(int chatId);
+
 	@Transactional
 	public void insertLocation(String location, int userId);
+
 	@Transactional
 	public void insertFavoriteLocation(String location, int userId);
-	
-	public String getFavoriteLocationForUser( int userId) ;
-	
-	public Set<City> getHistoryForUser( int userId) ;
+
+	public String getFavoriteLocationForUser(int userId);
+
+	public Set<City> getHistoryForUser(int userId);
 }
