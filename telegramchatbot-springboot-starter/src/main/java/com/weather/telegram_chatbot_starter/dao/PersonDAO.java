@@ -5,6 +5,7 @@ import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.pengrad.telegrambot.model.Contact;
@@ -13,6 +14,7 @@ import com.weather.telegram_chatbot_starter.model.Person;
 import com.weather.telegram_chatbot_starter.repo.LocationRepo;
 import com.weather.telegram_chatbot_starter.repo.PersonRepo;
 
+@Repository
 public class PersonDAO implements IPersonDAO {
 
 	/** The Constant LOGGER. */

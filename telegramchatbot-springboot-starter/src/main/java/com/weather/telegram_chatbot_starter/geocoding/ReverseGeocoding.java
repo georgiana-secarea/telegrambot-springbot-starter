@@ -2,6 +2,8 @@ package com.weather.telegram_chatbot_starter.geocoding;
 
 import java.io.IOException;
 
+import org.springframework.stereotype.Service;
+
 import com.google.maps.GeoApiContext;
 import com.google.maps.GeocodingApi;
 import com.google.maps.errors.ApiException;
@@ -9,7 +11,8 @@ import com.google.maps.model.AddressType;
 import com.google.maps.model.GeocodingResult;
 import com.google.maps.model.LatLng;
 
-public class ReverseGeocoding { 
+@Service
+public class ReverseGeocoding {
 
 	public String getCity(double lat, double lng) throws ApiException, InterruptedException, IOException {
 

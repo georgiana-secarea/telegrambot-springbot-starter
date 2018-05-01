@@ -1,27 +1,37 @@
 package com.weather.telegram_chatbot_starter.geocoding;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.weather.telegram_chatbot_starter.dao.IAdviceDAO;
+import com.weather.telegram_chatbot_starter.model.Advice;
 import com.weather.telegram_chatbot_starter.model.Forecast;
 import com.weather.telegram_chatbot_starter.model.Weather;
-
 import net.aksingh.owmjapis.api.APIException;
 import net.aksingh.owmjapis.core.OWM;
 import net.aksingh.owmjapis.model.CurrentWeather;
 import net.aksingh.owmjapis.model.HourlyWeatherForecast;
 import net.aksingh.owmjapis.model.param.WeatherData;
 
+@Service
 public class WeatherInfoGather {
 
-	// declaring object of "OWM" class
-	OWM owm = new OWM("e3e4e932f1805e307be401fdbedf21a3");
+	private static final int THREE_DAYS_FORECAST_SEARCH_COUNT = 24;
+	private static final int NEXT_SEARCH_HOURS_INTERVAL = 3;
+	private static final int DAILY_HOURS = 24;
+	private static final int DAILY_WEATHER_GATHER_COUNT = 7;
 
-	public Weather getCurrentWeather(String city) throws APIException {
+	@Autowired
+	private OWM owm;
 
-		// getting current weather data for the "London" city
-		CurrentWeather cwd = owm.currentWeatherByCityName(city);
+	public Weather getCurrentWeather(String city, IAdviceDAO adviceDAO) throws APIException {
+
+		// getting current weather data for the desired city
+		final CurrentWeather cwd = owm.currentWeatherByCityName(city);
 
 		// checking data retrieval was successful or not
 		if (cwd.hasRespCode() && cwd.getRespCode() == 200) {
@@ -29,16 +39,15 @@ public class WeatherInfoGather {
 			// checking if city name is available
 			if (cwd.hasCityName()) {
 
-				Weather currentWeather = new Weather();
+				final Advice currentAdvice = adviceDAO.getAdvice(cwd.getWeatherList().get(0).getMainInfo());
 
-				HashMap<String, String> adviceMap = getWeatherAdvice();
-
+				final Weather currentWeather = new Weather();
 				currentWeather.setTemperature(cwd.getMainData().getTemp() - 273.15);
 				currentWeather.setDescription(cwd.getWeatherList().get(0).getDescription());
 				currentWeather.setPressure(cwd.getMainData().getPressure());
 				currentWeather.setHumidity(cwd.getMainData().getHumidity());
 				currentWeather.setRainfall(cwd.getCloudData().getCloud());
-				currentWeather.setAdvice(adviceMap.get(cwd.getWeatherList().get(0).getMainInfo()));
+				currentWeather.setAdvice(currentAdvice.getMessage());
 				return currentWeather;
 			}
 
@@ -49,7 +58,7 @@ public class WeatherInfoGather {
 	public List<Forecast> getForecast(String city) throws APIException {
 
 		// getting current weather data for the desired city
-		HourlyWeatherForecast forecast = owm.hourlyWeatherForecastByCityName(city);
+		final HourlyWeatherForecast forecast = owm.hourlyWeatherForecastByCityName(city);
 
 		// checking data retrieval was successful or not
 		if (forecast.hasRespCode() && forecast.getRespCode().equals("200")) {
@@ -62,15 +71,21 @@ public class WeatherInfoGather {
 				List<Double> pressureList = new ArrayList<Double>();
 				List<Double> humidityList = new ArrayList<Double>();
 
-				for (int currentDataIndex = 0; currentDataIndex < forecast.getDataList().size(); currentDataIndex++) {
-					WeatherData currentData = forecast.getDataList().get(currentDataIndex);
+				int nextDayFirstIndex = ((DAILY_HOURS - LocalDateTime.now().getHour()) / NEXT_SEARCH_HOURS_INTERVAL);
+
+				List<WeatherData> threeDaysForecast = forecast.getDataList().subList(nextDayFirstIndex,
+						nextDayFirstIndex + THREE_DAYS_FORECAST_SEARCH_COUNT);
+
+				for (int currentDataIndex = 0; currentDataIndex < threeDaysForecast.size(); currentDataIndex++) {
+
+					final WeatherData currentData = threeDaysForecast.get(currentDataIndex);
 
 					temperatureList.add(currentData.getMainData().getTemp() - 273.15);
 					rainfallList.add(currentData.getCloudData().getCloud());
 					pressureList.add(currentData.getMainData().getPressure());
 					humidityList.add(currentData.getMainData().getHumidity());
 
-					if (currentDataIndex != 0 && currentDataIndex % 8 == 0) {
+					if (currentDataIndex != 0 && currentDataIndex % DAILY_WEATHER_GATHER_COUNT == 0) {
 						Double minTemp = temperatureList.stream().mapToDouble(val -> val).min().getAsDouble();
 						Double avgTemp = temperatureList.stream().mapToDouble(val -> val).average().getAsDouble();
 						Double maxTemp = temperatureList.stream().mapToDouble(val -> val).max().getAsDouble();
@@ -78,7 +93,7 @@ public class WeatherInfoGather {
 						Double avgPressure = pressureList.stream().mapToDouble(val -> val).average().getAsDouble();
 						Double avgHumidity = humidityList.stream().mapToDouble(val -> val).average().getAsDouble();
 
-						Forecast currentForecast = new Forecast();
+						final Forecast currentForecast = new Forecast();
 						currentForecast.setDescription(currentData.getWeatherList().get(0).getDescription());
 						currentForecast.setMinTemp(minTemp);
 						currentForecast.setAvgTemp(avgTemp);
@@ -86,6 +101,7 @@ public class WeatherInfoGather {
 						currentForecast.setRainfall(avgRainfall);
 						currentForecast.setPressure(avgPressure);
 						currentForecast.setHumidity(avgHumidity);
+						currentForecast.setDate(currentData.getDateTimeText().substring(0, 10));
 
 						forecastList.add(currentForecast);
 
@@ -94,24 +110,11 @@ public class WeatherInfoGather {
 						pressureList.clear();
 						humidityList.clear();
 					}
-
 				}
-
 				return forecastList;
 			}
 		}
 		return null;
-	}
-
-	private HashMap<String, String> getWeatherAdvice() {
-		HashMap<String, String> adviceMap = new HashMap<>();
-		adviceMap.put("Clear", "It's time for a picnic. A clear blue sky is waiting for you.");
-		adviceMap.put("Few clouds", "The sun is hiding from you momentarily, yet life can still be enjoyable.");
-		adviceMap.put("Rain", "Don't forget the shower gel, as you're going to take a bath today.");
-		adviceMap.put("Thunderstorm",
-				"Thunderstruck! Oh, sorry, too much AC/DC ruined my creator's mind. In a positive way, that is. Nevermind, I can report a thunderstom as we ... speak");
-		adviceMap.put("Snow", "The snow is snowing, enjoy the snowflakes!");
-		return adviceMap;
 	}
 
 }

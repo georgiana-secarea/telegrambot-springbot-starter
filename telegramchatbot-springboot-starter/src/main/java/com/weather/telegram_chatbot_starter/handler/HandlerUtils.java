@@ -3,19 +3,26 @@ package com.weather.telegram_chatbot_starter.handler;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.pengrad.telegrambot.model.request.ForceReply;
 import com.pengrad.telegrambot.model.request.KeyboardButton;
 import com.pengrad.telegrambot.model.request.ParseMode;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
 import com.pengrad.telegrambot.request.SendMessage;
+import com.weather.telegram_chatbot_starter.dao.IAdviceDAO;
 import com.weather.telegram_chatbot_starter.geocoding.WeatherInfoGather;
 import com.weather.telegram_chatbot_starter.model.City;
 import com.weather.telegram_chatbot_starter.model.Forecast;
 import com.weather.telegram_chatbot_starter.model.Weather;
-
 import net.aksingh.owmjapis.api.APIException;
 
+@Service
 public class HandlerUtils {
+
+	@Autowired
+	WeatherInfoGather gatherCityWeather;
 
 	/**
 	 * This is a menu with the core features of this WeatherBOT
@@ -99,14 +106,13 @@ public class HandlerUtils {
 	 * @param locationStr
 	 * @return
 	 */
-	public SendMessage processWeather(Integer chatId, Integer messageId, String locationStr) {
-		WeatherInfoGather gatherCityWeather = new WeatherInfoGather();
+	public SendMessage processWeather(Integer chatId, Integer messageId, String locationStr, IAdviceDAO adviceDAO) {
 		SendMessage sendMessage;
 		Weather currentWeather;
 		try {
 
 			if (locationStr != null) {
-				currentWeather = gatherCityWeather.getCurrentWeather(locationStr);
+				currentWeather = gatherCityWeather.getCurrentWeather(locationStr, adviceDAO);
 
 				sendMessage = new SendMessage(chatId,
 						"Your location has been saved internally in case you want to check your search history ("
@@ -139,7 +145,6 @@ public class HandlerUtils {
 	 * @return
 	 */
 	public SendMessage processForecast(Integer chatId, Integer messageId, String locationStr) {
-		WeatherInfoGather gatherCityWeather = new WeatherInfoGather();
 		SendMessage sendMessage;
 		List<Forecast> forecast;
 		try {
@@ -148,16 +153,15 @@ public class HandlerUtils {
 
 				forecast = gatherCityWeather.getForecast(locationStr);
 
-				locationStr = "";
-
 				String displayForecast = "";
 				if (!forecast.isEmpty()) {
 					for (Forecast currentHourForecast : forecast)
 						displayForecast = displayForecast.concat(currentHourForecast.toString());
 				}
 				sendMessage = new SendMessage(chatId,
-						"Below is the forecast for the upcoming days: \n" + displayForecast).parseMode(ParseMode.HTML)
-								.disableNotification(false).replyToMessageId(messageId).replyMarkup(showMainMenu());
+						"Below is the forecast for " + locationStr + ": \n\n" + displayForecast)
+								.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
+								.replyMarkup(showMainMenu());
 			} else
 				sendMessage = new SendMessage(chatId,
 						"You must enter the required format to receive the weather information!")
@@ -176,16 +180,16 @@ public class HandlerUtils {
 	 * 
 	 * @param chatId
 	 * @param messageId
-	 * @param cities
+	 * @param citiesSet
 	 * @return
 	 */
-	public SendMessage retrieveUserSearchHistory(Integer chatId, Integer messageId, Set<City> cities) {
+	public SendMessage retrieveUserSearchHistory(Integer chatId, Integer messageId, Set<City> citiesSet) {
 		SendMessage sendMessage;
 		String citiesList = "";
 
-		if (cities != null && !cities.isEmpty()) {
-			for (City c : cities) {
-				citiesList = citiesList.concat(c.getName() + "; ");
+		if (citiesSet != null && !citiesSet.isEmpty()) {
+			for (City currentCity : citiesSet) {
+				citiesList = citiesList.concat(currentCity.getName() + "; ");
 			}
 
 			sendMessage = new SendMessage(chatId, "Your search list history is the following one: " + citiesList)

@@ -9,12 +9,11 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.weather.telegram_chatbot_starter.dao.IAdviceDAO;
 import com.weather.telegram_chatbot_starter.dao.IPersonDAO;
-import com.weather.telegram_chatbot_starter.dao.PersonDAO;
 import com.weather.telegram_chatbot_starter.geocoding.ReverseGeocoding;
 import com.weather.telegram_chatbot_starter.model.Person;
 import com.weather.telegram_chatbot_starter.model.City;
-import com.weather.telegram_chatbot_starter.repo.LocationRepo;
 import com.weather.telegram_chatbot_starter.repo.PersonRepo;
 
 import com.google.maps.errors.ApiException;
@@ -37,23 +36,25 @@ public class SimpleUpdateHandler implements UpdatesListener {
 	private TelegramBot bot;
 
 	@Autowired
-	PersonRepo personRepo;
+	private PersonRepo personRepo;
 
 	@Autowired
-	LocationRepo locationRepo;
+	private IPersonDAO personDAO;
 
-	IPersonDAO personDAO;
+	@Autowired
+	private IAdviceDAO adviceDAO;
 
-	String locationStr = "";
+	@Autowired
+	private String locationStr;
 
-	ReverseGeocoding revGeo = new ReverseGeocoding();
+	@Autowired
+	private ReverseGeocoding revGeo;
 
-	HandlerUtils handlerUtils = new HandlerUtils();
+	@Autowired
+	private HandlerUtils handlerUtils;
 
 	@Override
 	public int process(List<Update> updates) {
-
-		personDAO = new PersonDAO(personRepo, locationRepo);
 
 		for (Update update : updates) {
 			Integer chatId = update.message().from().id();
@@ -71,7 +72,7 @@ public class SimpleUpdateHandler implements UpdatesListener {
 
 					personDAO.insertFavoriteLocation(favLocation, chatId);
 
-					sendMessage = handlerUtils.processWeather(chatId, messageId, favLocation);
+					sendMessage = handlerUtils.processWeather(chatId, messageId, favLocation, adviceDAO);
 
 				} else if (messageText.startsWith("/loc ")) {
 					String[] inputLocation = messageText.split("/loc ", 2);
@@ -79,7 +80,7 @@ public class SimpleUpdateHandler implements UpdatesListener {
 
 					personDAO.insertLocation(locationStr, chatId);
 
-					sendMessage = handlerUtils.processWeather(chatId, messageId, locationStr);
+					sendMessage = handlerUtils.processWeather(chatId, messageId, locationStr, adviceDAO);
 				} else {
 					switch (messageText) {
 					case "/start": {
@@ -133,10 +134,10 @@ public class SimpleUpdateHandler implements UpdatesListener {
 					}
 					case "App credits": {
 						sendMessage = new SendMessage(chatId,
-								"Developers: Georgiana Secarea and Mircea Stan\n "
+								"Developers: Georgiana Secarea and Mircea Stan;\n"
 										+ "Special thanks to Vlad for his continuous support throughout this project!")
 												.parseMode(ParseMode.HTML).disableNotification(false)
-												.replyToMessageId(messageId).replyMarkup(new ForceReply());
+												.replyToMessageId(messageId).replyMarkup(handlerUtils.showMainMenu());
 						break;
 					}
 					default: {
@@ -166,7 +167,7 @@ public class SimpleUpdateHandler implements UpdatesListener {
 
 				personDAO.insertLocation(location, chatId);
 
-				sendMessage = handlerUtils.processWeather(chatId, messageId, location);
+				sendMessage = handlerUtils.processWeather(chatId, messageId, location, adviceDAO);
 
 			} else {
 				sendMessage = new SendMessage(chatId, "How may I be at your service?").parseMode(ParseMode.HTML)

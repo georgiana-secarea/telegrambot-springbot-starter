@@ -10,6 +10,7 @@ public class Forecast {
 	public Double pressure;
 	public Double humidity;
 	public Double rainfall;
+	public String date;
 
 	public Double getMinTemp() {
 		return minTemp;
@@ -21,6 +22,14 @@ public class Forecast {
 
 	public Double getMaxTemp() {
 		return maxTemp;
+	}
+
+	public String getDate() {
+		return date;
+	}
+
+	public void setDate(String date) {
+		this.date = date;
 	}
 
 	public void setMaxTemp(Double maxTemp) {
@@ -77,11 +86,11 @@ public class Forecast {
 
 	@Override
 	public String toString() {
-		return "Average Temperature: " + String.format("%.2f", avgTemp) + "°C | Minimum Temperature: "
-				+ String.format("%.2f", minTemp) + "°C | Maximum Temperature: " + String.format("%.2f", maxTemp)
-				+ "°C | Description: " + description + " | Pressure: " + String.format("%.2f", pressure)
-				+ " HPA | Humidity: " + String.format("%.2f", humidity) + "% | Rainfall: "
-				+ String.format("%.2f", rainfall) + "% \n\n";
+		return "Date: " + date + " | Average Temperature: " + String.format("%.2f", avgTemp)
+				+ "°C | Minimum Temperature: " + String.format("%.2f", minTemp) + "°C | Maximum Temperature: "
+				+ String.format("%.2f", maxTemp) + "°C | Description: " + description + " | Pressure: "
+				+ String.format("%.2f", pressure) + " HPA | Humidity: " + String.format("%.2f", humidity)
+				+ "% | Rainfall: " + String.format("%.2f", rainfall) + "% \n\n";
 	}
 
 }

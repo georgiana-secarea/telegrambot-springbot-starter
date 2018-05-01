@@ -51,7 +51,7 @@ public class PersonServiceImpl implements PersonService{
 		public PersonDto addNewOrGetExisting(int id, String phoneNumber) {
 			Person person = personRepo.findById(id);
 			if (person!=null) {
-				LOGGER.info(() -> String.format("The person with id %s is allready present",id));
+				LOGGER.info(() -> String.format("The person with id %s is already present",id));
 				return toPersonDto(person);
 			} else {
 				LOGGER.info(() -> String.format("The person with id %s is not present",id));
