@@ -198,7 +198,7 @@ public class HandlerUtils {
 		} else {
 			sendMessage = new SendMessage(chatId, "You didn't search any location until now!").parseMode(ParseMode.HTML)
 					.disableWebPagePreview(true).disableNotification(true).replyToMessageId(messageId)
-					.replyMarkup(new ForceReply());
+					.replyMarkup(showMainMenu());
 		}
 
 		return sendMessage;
