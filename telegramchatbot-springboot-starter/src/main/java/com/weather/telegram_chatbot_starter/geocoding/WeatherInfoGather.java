@@ -11,6 +11,8 @@ import com.weather.telegram_chatbot_starter.dao.IAdviceDAO;
 import com.weather.telegram_chatbot_starter.model.Advice;
 import com.weather.telegram_chatbot_starter.model.Forecast;
 import com.weather.telegram_chatbot_starter.model.Weather;
+import com.weather.telegram_chatbot_starter.utils.BotUtils;
+
 import net.aksingh.owmjapis.api.APIException;
 import net.aksingh.owmjapis.core.OWM;
 import net.aksingh.owmjapis.model.CurrentWeather;
@@ -20,15 +22,13 @@ import net.aksingh.owmjapis.model.param.WeatherData;
 @Service
 public class WeatherInfoGather {
 
-	private static final int THREE_DAYS_FORECAST_SEARCH_COUNT = 24;
-	private static final int NEXT_SEARCH_HOURS_INTERVAL = 3;
-	private static final int DAILY_HOURS = 24;
-	private static final int DAILY_WEATHER_GATHER_COUNT = 7;
-
 	@Autowired
 	private OWM owm;
 
-	public Weather getCurrentWeather(String city, IAdviceDAO adviceDAO) throws APIException {
+	@Autowired
+	private IAdviceDAO adviceDAO;
+
+	public Weather getCurrentWeather(String city) throws APIException {
 
 		// getting current weather data for the desired city
 		final CurrentWeather cwd = owm.currentWeatherByCityName(city);
@@ -71,10 +71,11 @@ public class WeatherInfoGather {
 				List<Double> pressureList = new ArrayList<Double>();
 				List<Double> humidityList = new ArrayList<Double>();
 
-				int nextDayFirstIndex = ((DAILY_HOURS - LocalDateTime.now().getHour()) / NEXT_SEARCH_HOURS_INTERVAL);
+				int nextDayFirstIndex = ((BotUtils.DAILY_HOURS - LocalDateTime.now().getHour())
+						/ BotUtils.NEXT_SEARCH_HOURS_INTERVAL);
 
 				List<WeatherData> threeDaysForecast = forecast.getDataList().subList(nextDayFirstIndex,
-						nextDayFirstIndex + THREE_DAYS_FORECAST_SEARCH_COUNT);
+						nextDayFirstIndex + BotUtils.THREE_DAYS_FORECAST_SEARCH_COUNT);
 
 				for (int currentDataIndex = 0; currentDataIndex < threeDaysForecast.size(); currentDataIndex++) {
 
@@ -85,7 +86,7 @@ public class WeatherInfoGather {
 					pressureList.add(currentData.getMainData().getPressure());
 					humidityList.add(currentData.getMainData().getHumidity());
 
-					if (currentDataIndex != 0 && currentDataIndex % DAILY_WEATHER_GATHER_COUNT == 0) {
+					if (currentDataIndex != 0 && currentDataIndex % BotUtils.DAILY_WEATHER_GATHER_COUNT == 0) {
 						Double minTemp = temperatureList.stream().mapToDouble(val -> val).min().getAsDouble();
 						Double avgTemp = temperatureList.stream().mapToDouble(val -> val).average().getAsDouble();
 						Double maxTemp = temperatureList.stream().mapToDouble(val -> val).max().getAsDouble();
@@ -116,5 +117,4 @@ public class WeatherInfoGather {
 		}
 		return null;
 	}
-
 }
