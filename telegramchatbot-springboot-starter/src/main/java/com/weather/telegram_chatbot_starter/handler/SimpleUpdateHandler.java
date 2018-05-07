@@ -1,30 +1,29 @@
 package com.weather.telegram_chatbot_starter.handler;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.weather.telegram_chatbot_starter.dao.IAdviceDAO;
-import com.weather.telegram_chatbot_starter.dao.IPersonDAO;
-import com.weather.telegram_chatbot_starter.geocoding.ReverseGeocoding;
-import com.weather.telegram_chatbot_starter.model.Person;
-import com.weather.telegram_chatbot_starter.model.City;
-import com.weather.telegram_chatbot_starter.repo.PersonRepo;
-
-import com.google.maps.errors.ApiException;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
-import com.pengrad.telegrambot.model.Contact;
-import com.pengrad.telegrambot.model.Location;
+import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
-import com.pengrad.telegrambot.model.request.ForceReply;
-import com.pengrad.telegrambot.model.request.ParseMode;
-import com.pengrad.telegrambot.request.SendMessage;
+import com.weather.telegram_chatbot_starter.service.AnotherLocationWeatherButtonAction;
+import com.weather.telegram_chatbot_starter.service.ApplicationCreditsButtonAction;
+import com.weather.telegram_chatbot_starter.service.BackToMenuButtonAction;
+import com.weather.telegram_chatbot_starter.service.DenyButtonAction;
+import com.weather.telegram_chatbot_starter.service.FavoriteLocationCommandAction;
+import com.weather.telegram_chatbot_starter.service.ForecastButtonAction;
+import com.weather.telegram_chatbot_starter.service.SearchHistoryButtonAction;
+import com.weather.telegram_chatbot_starter.service.ShareContactAction;
+import com.weather.telegram_chatbot_starter.service.ShareLocationAction;
+import com.weather.telegram_chatbot_starter.service.StartCommandAction;
+import com.weather.telegram_chatbot_starter.service.UnknownCommandAction;
+import com.weather.telegram_chatbot_starter.service.WeatherCommandAction;
+import com.weather.telegram_chatbot_starter.utils.UItils;
 
 @Service
 public class SimpleUpdateHandler implements UpdatesListener {
@@ -33,151 +32,158 @@ public class SimpleUpdateHandler implements UpdatesListener {
 	public static final Logger LOGGER = LogManager.getLogger();
 
 	@Autowired
-	private TelegramBot bot;
+	private TelegramBot telegramBot;
 
 	@Autowired
-	private PersonRepo personRepo;
+	private StartCommandAction startCommand;
 
 	@Autowired
-	private IPersonDAO personDAO;
+	private FavoriteLocationCommandAction favoriteLocationCommand;
 
 	@Autowired
-	private IAdviceDAO adviceDAO;
+	private WeatherCommandAction chosenLocationWeatherCommand;
 
 	@Autowired
-	private String locationStr;
+	private ShareContactAction shareContactAction;
 
 	@Autowired
-	private ReverseGeocoding revGeo;
+	private ShareLocationAction shareLocationAction;
 
 	@Autowired
-	private HandlerUtils handlerUtils;
+	private DenyButtonAction denyButton;
+
+	@Autowired
+	private ForecastButtonAction forecastButton;
+
+	@Autowired
+	private AnotherLocationWeatherButtonAction anotherLocationWeatherButton;
+
+	@Autowired
+	private SearchHistoryButtonAction searchHistoryButton;
+
+	@Autowired
+	private BackToMenuButtonAction backToMenuButton;
+
+	@Autowired
+	private ApplicationCreditsButtonAction applicationCreditsButton;
+
+	@Autowired
+	private UnknownCommandAction unknownButton;
 
 	@Override
 	public int process(List<Update> updates) {
-
 		for (Update update : updates) {
-			Integer chatId = update.message().from().id();
-			String messageText = update.message().text();
-			Integer messageId = update.message().messageId();
-			Location userLocation = update.message().location();
-			Contact userContact = update.message().contact();
-
-			SendMessage sendMessage;
-
-			if (messageText != null) {
-				if (messageText.startsWith("/fav ")) {
-					String[] inputLocation = messageText.split("/fav ", 2);
-					String favLocation = inputLocation[1];
-
-					personDAO.insertFavoriteLocation(favLocation, chatId);
-
-					sendMessage = handlerUtils.processWeather(chatId, messageId, favLocation, adviceDAO);
-
-				} else if (messageText.startsWith("/loc ")) {
-					String[] inputLocation = messageText.split("/loc ", 2);
-					locationStr = inputLocation[1];
-
-					personDAO.insertLocation(locationStr, chatId);
-
-					sendMessage = handlerUtils.processWeather(chatId, messageId, locationStr, adviceDAO);
-				} else {
-					switch (messageText) {
-					case "/start": {
-						Person person = personRepo.findById(chatId);
-
-						if (person != null && person.getFirstName() != null) {
-
-							sendMessage = new SendMessage(chatId,
-									"Welcome back, " + person.getFirstName() + " " + person.getLastName()
-											+ ". What would you wish to check?").parseMode(ParseMode.HTML)
-													.disableNotification(false).replyToMessageId(messageId)
-													.replyMarkup(handlerUtils.showMainMenu());
-						} else {
-							personDAO.insertPerson(chatId);
-
-							sendMessage = handlerUtils.shareDetailsMenu(chatId, messageId);
-						}
-						break;
-					}
-
-					case "Deny": {
-						sendMessage = new SendMessage(chatId, "Alright, got it. Now, what would you wish to know?")
-								.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
-								.replyMarkup(handlerUtils.showMainMenu());
-						break;
-					}
-					case "Another location weather information": {
-						sendMessage = new SendMessage(chatId,
-								"Please choose your location first, by using the format /loc yourLocation")
-										.parseMode(ParseMode.HTML).disableNotification(false)
-										.replyToMessageId(messageId).replyMarkup(new ForceReply());
-						break;
-					}
-					case "My search list history": {
-						Set<City> cities = personDAO.getHistoryForUser(chatId);
-
-						sendMessage = handlerUtils.retrieveUserSearchHistory(chatId, messageId, cities);
-
-						break;
-					}
-					case "Show forecast": {
-						sendMessage = handlerUtils.processForecast(chatId, messageId, locationStr);
-
-						break;
-					}
-					case "Go back to menu": {
-						sendMessage = new SendMessage(chatId, "Below you can find the main menu.")
-								.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
-								.replyMarkup(handlerUtils.showMainMenu());
-						break;
-					}
-					case "App credits": {
-						sendMessage = new SendMessage(chatId,
-								"Developers: Georgiana Secarea and Mircea Stan;\n"
-										+ "Special thanks to Vlad for his continuous support throughout this project!")
-												.parseMode(ParseMode.HTML).disableNotification(false)
-												.replyToMessageId(messageId).replyMarkup(handlerUtils.showMainMenu());
-						break;
-					}
-					default: {
-						sendMessage = new SendMessage(chatId, "How may I be at your service?").parseMode(ParseMode.HTML)
-								.disableNotification(false).replyToMessageId(messageId).replyMarkup(new ForceReply());
-						break;
-					}
-					}
-				}
-			} else if (userContact != null) {
-				personDAO.insertPerson(userContact);
-
-				sendMessage = new SendMessage(chatId, "Your contact details have been saved internally ("
-						+ userContact.phoneNumber()
-						+ ").\nNow please enter your favorite location where you want your notifications to be received"
-						+ ", using the format \"/fav yourLocation\"").parseMode(ParseMode.HTML)
-								.disableNotification(false).replyToMessageId(messageId).replyMarkup(new ForceReply());
-			} else if (userLocation != null) {
-				String location = "Not available";
-
-				try {
-					location = revGeo.getCity(userLocation.latitude(), userLocation.longitude());
-
-				} catch (ApiException | InterruptedException | IOException e) {
-					e.printStackTrace();
-				}
-
-				personDAO.insertLocation(location, chatId);
-
-				sendMessage = handlerUtils.processWeather(chatId, messageId, location, adviceDAO);
-
-			} else {
-				sendMessage = new SendMessage(chatId, "How may I be at your service?").parseMode(ParseMode.HTML)
-						.disableNotification(false).replyToMessageId(messageId).replyMarkup(new ForceReply());
-			}
-
-			bot.execute(sendMessage);
+			process(update);
 		}
-
 		return UpdatesListener.CONFIRMED_UPDATES_ALL;
 	}
 
+	/**
+	 * This method dispatches the type of received update to the correct routine
+	 * 
+	 * @param update
+	 */
+
+	private void process(Update update) {
+		if (update.message() != null && update.message().location() != null) {
+			processUserLocation(update.message());
+			return;
+		} else if (update.message() != null && update.message().contact() != null) {
+			processUserContact(update.message());
+			return;
+		} else if (update.message() != null) {
+			processUserMessages(update.message());
+			return;
+		}
+	}
+
+	/**
+	 * This method processes the share location to generate the according data for
+	 * the current weather
+	 * 
+	 * @param message
+	 */
+	public void processUserLocation(Message message) {
+		shareLocationAction.execute(telegramBot, message);
+	}
+
+	/**
+	 * This method processes the share contact to store the according data for the
+	 * current user
+	 * 
+	 * @param message
+	 */
+	public void processUserContact(Message message) {
+		shareContactAction.execute(telegramBot, message);
+	}
+
+	/**
+	 * This method processes the button commands throughout the user interface,
+	 * depending on their bound text value
+	 * 
+	 * @param message
+	 */
+	public void processUserMessages(Message message) {
+		final String messageText = message.text();
+		if (messageText.startsWith(UItils.FAVORITE_LOCATION)) {
+			favoriteLocationCommand.execute(telegramBot, message);
+		} else if (messageText.startsWith(UItils.CHOSEN_LOCATION_CURRENT_WEATHER)) {
+			chosenLocationWeatherCommand.execute(telegramBot, message);
+		} else {
+			switch (messageText) {
+			case UItils.START_COMMAND: {
+				startCommand.execute(telegramBot, message);
+				break;
+			}
+			case UItils.DENY_ACTION: {
+				denyButton.execute(telegramBot, message);
+				break;
+			}
+			case UItils.SHOW_FORECAST: {
+				forecastButton.execute(telegramBot, message);
+				break;
+			}
+			case UItils.ANOTHER_LOCATION_WEATHER_INFO: {
+				anotherLocationWeatherButton.execute(telegramBot, message);
+				break;
+			}
+			case UItils.SEARCH_USER_LIST_HISTORY: {
+				searchHistoryButton.execute(telegramBot, message);
+				break;
+			}
+			case UItils.BACK_TO_MENU: {
+				backToMenuButton.execute(telegramBot, message);
+				break;
+			}
+			case UItils.APPLICATION_CREDITS: {
+				applicationCreditsButton.execute(telegramBot, message);
+				break;
+			}
+			default: {
+				unknownButton.execute(telegramBot, message);
+				break;
+			}
+			}
+		}
+	}
+
+	// public void processUserMessages(Message message) {
+	// final String messageText = message.text();
+	// boolean foundValue = false;
+	// for (InputCommands command : InputCommands.values()) {
+	// if (command.getCommandText().matches(messageText)) {
+	// command.getAction().execute(bot, message);
+	// foundValue = true;
+	// break;
+	// } else if (command.getCommandText().startsWith(messageText)) {
+	// command.getAction().execute(bot, message);
+	// foundValue = true;
+	// break;
+	// }
+	// }
+	// if (!foundValue) {
+	// InputCommands command = InputCommands.UNKNOWN_COMMAND;
+	// command.getAction().execute(bot, message);
+	// }
+	// }
 }
