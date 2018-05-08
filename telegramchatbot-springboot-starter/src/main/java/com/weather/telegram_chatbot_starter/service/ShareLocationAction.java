@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+<<<<<<< HEAD
 import com.google.maps.GeoApiContext;
 import com.google.maps.GeocodingApi;
 import com.google.maps.errors.ApiException;
@@ -73,6 +74,56 @@ public class ShareLocationAction implements MessageCommandAction<Void> {
 		final String city = results[0].addressComponents[0].longName;
 
 		return city;
+=======
+import com.google.maps.errors.ApiException;
+import com.pengrad.telegrambot.TelegramBot;
+import com.pengrad.telegrambot.model.Location;
+import com.pengrad.telegrambot.model.Message;
+import com.pengrad.telegrambot.model.request.ForceReply;
+import com.pengrad.telegrambot.model.request.ParseMode;
+import com.pengrad.telegrambot.request.SendMessage;
+import com.weather.telegram_chatbot_starter.dao.IPersonDAO;
+import com.weather.telegram_chatbot_starter.handler.HandlerUtils;
+
+@Service
+public class ShareLocationAction implements MessageCommandAction<Void> {
+
+	public static final Logger LOGGER = LogManager.getLogger();
+
+	@Autowired
+	private IPersonDAO personDAO;
+
+	@Autowired
+	private HandlerUtils handlerUtils;
+
+	@Override
+	public Void execute(TelegramBot bot, Message message) {
+
+		final Integer chatId = message.from().id();
+		final Integer messageId = message.messageId();
+		final Location userLocation = message.location();
+
+		String currentLocation = "N/A";
+		try {
+			currentLocation = handlerUtils.getCity(userLocation.latitude(), userLocation.longitude());
+		} catch (ApiException | InterruptedException | IOException e) {
+			LOGGER.error("Error caught while trying to parse the location: " + e.getMessage());
+
+			final SendMessage response = new SendMessage(chatId, "The location could not be parsed, please try again!")
+					.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
+					.replyMarkup(new ForceReply());
+			bot.execute(response);
+
+			return null;
+		}
+
+		personDAO.insertLocation(currentLocation, chatId);
+
+		final SendMessage response = handlerUtils.processWeather(chatId, messageId, currentLocation);
+		bot.execute(response);
+
+		return null;
+>>>>>>> branch 'master' of https://github.com/georgiana-secarea/telegrambot-springbot-starter
 	}
 
 }

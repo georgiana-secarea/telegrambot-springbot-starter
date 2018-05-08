@@ -23,7 +23,11 @@ import com.weather.telegram_chatbot_starter.service.ShareLocationAction;
 import com.weather.telegram_chatbot_starter.service.StartCommandAction;
 import com.weather.telegram_chatbot_starter.service.UnknownCommandAction;
 import com.weather.telegram_chatbot_starter.service.WeatherCommandAction;
+<<<<<<< HEAD
 import com.weather.telegram_chatbot_starter.utils.UItils;
+=======
+import com.weather.telegram_chatbot_starter.utils.BotUtils;
+>>>>>>> branch 'master' of https://github.com/georgiana-secarea/telegrambot-springbot-starter
 
 @Service
 public class SimpleUpdateHandler implements UpdatesListener {
@@ -125,6 +129,7 @@ public class SimpleUpdateHandler implements UpdatesListener {
 	 */
 	public void processUserMessages(Message message) {
 		final String messageText = message.text();
+<<<<<<< HEAD
 		if (messageText.startsWith(UItils.FAVORITE_LOCATION)) {
 			favoriteLocationCommand.execute(telegramBot, message);
 		} else if (messageText.startsWith(UItils.CHOSEN_LOCATION_CURRENT_WEATHER)) {
@@ -156,6 +161,39 @@ public class SimpleUpdateHandler implements UpdatesListener {
 				break;
 			}
 			case UItils.APPLICATION_CREDITS: {
+=======
+		if (messageText.startsWith(BotUtils.FAVORITE_LOCATION)) {
+			favoriteLocationCommand.execute(telegramBot, message);
+		} else if (messageText.startsWith(BotUtils.CHOSEN_LOCATION_CURRENT_WEATHER)) {
+			chosenLocationWeatherCommand.execute(telegramBot, message);
+		} else {
+			switch (messageText) {
+			case BotUtils.START_COMMAND: {
+				startCommand.execute(telegramBot, message);
+				break;
+			}
+			case BotUtils.DENY_ACTION: {
+				denyButton.execute(telegramBot, message);
+				break;
+			}
+			case BotUtils.SHOW_FORECAST: {
+				forecastButton.execute(telegramBot, message);
+				break;
+			}
+			case BotUtils.ANOTHER_LOCATION_WEATHER_INFO: {
+				anotherLocationWeatherButton.execute(telegramBot, message);
+				break;
+			}
+			case BotUtils.SEARCH_USER_LIST_HISTORY: {
+				searchHistoryButton.execute(telegramBot, message);
+				break;
+			}
+			case BotUtils.BACK_TO_MENU: {
+				backToMenuButton.execute(telegramBot, message);
+				break;
+			}
+			case BotUtils.APPLICATION_CREDITS: {
+>>>>>>> branch 'master' of https://github.com/georgiana-secarea/telegrambot-springbot-starter
 				applicationCreditsButton.execute(telegramBot, message);
 				break;
 			}
