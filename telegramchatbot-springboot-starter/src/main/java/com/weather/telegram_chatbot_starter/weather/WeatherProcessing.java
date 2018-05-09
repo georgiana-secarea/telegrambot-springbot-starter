@@ -16,7 +16,7 @@ import com.weather.telegram_chatbot_starter.model.Advice;
 import com.weather.telegram_chatbot_starter.model.City;
 import com.weather.telegram_chatbot_starter.model.Forecast;
 import com.weather.telegram_chatbot_starter.model.Weather;
-import com.weather.telegram_chatbot_starter.utils.UItils;
+import com.weather.telegram_chatbot_starter.utils.Utils;
 
 import net.aksingh.owmjapis.api.APIException;
 import net.aksingh.owmjapis.core.OWM;
@@ -55,7 +55,7 @@ public class WeatherProcessing {
 								+ locationStr + ").\n\nBelow you have the current weather information: \n"
 								+ currentWeather + "\n\n Would you like to check the forecast for this location too?")
 										.parseMode(ParseMode.HTML).disableNotification(false)
-										.replyToMessageId(messageId).replyMarkup(UItils.showForecastMenu());
+										.replyToMessageId(messageId).replyMarkup(Utils.showForecastMenu());
 
 			} else
 				sendMessage = new SendMessage(chatId,
@@ -72,6 +72,8 @@ public class WeatherProcessing {
 	}
 
 	/**
+	 * This method utilizes the OWM API to collect the current weather information
+	 * for the desired location
 	 * 
 	 * @param city
 	 * @return
@@ -130,7 +132,7 @@ public class WeatherProcessing {
 				sendMessage = new SendMessage(chatId,
 						"Below is the forecast for " + locationStr + ": \n\n" + displayForecast)
 								.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
-								.replyMarkup(UItils.showMainMenu());
+								.replyMarkup(Utils.showMainMenu());
 			} else
 				sendMessage = new SendMessage(chatId,
 						"You must enter the required format to receive the weather information!")
@@ -146,7 +148,8 @@ public class WeatherProcessing {
 	}
 
 	/**
-	 * This method utilizes the OWM API instance to process the next 3 days forecast
+	 * This method utilizes the OWM API to retrieve process the next 3 days forecast
+	 * for the desired location
 	 * 
 	 * @param city
 	 * @return
@@ -168,11 +171,11 @@ public class WeatherProcessing {
 				List<Double> pressureList = new ArrayList<Double>();
 				List<Double> humidityList = new ArrayList<Double>();
 
-				int nextDayFirstIndex = ((UItils.DAILY_HOURS - LocalDateTime.now().getHour())
-						/ UItils.NEXT_SEARCH_HOURS_INTERVAL);
+				int nextDayFirstIndex = ((Utils.DAILY_HOURS - LocalDateTime.now().getHour())
+						/ Utils.NEXT_SEARCH_HOURS_INTERVAL);
 
 				List<WeatherData> threeDaysForecast = forecast.getDataList().subList(nextDayFirstIndex,
-						nextDayFirstIndex + UItils.THREE_DAYS_FORECAST_SEARCH_COUNT);
+						nextDayFirstIndex + Utils.THREE_DAYS_FORECAST_SEARCH_COUNT);
 
 				for (int currentDataIndex = 0; currentDataIndex < threeDaysForecast.size(); currentDataIndex++) {
 
@@ -183,7 +186,7 @@ public class WeatherProcessing {
 					pressureList.add(currentData.getMainData().getPressure());
 					humidityList.add(currentData.getMainData().getHumidity());
 
-					if (currentDataIndex != 0 && currentDataIndex % UItils.DAILY_WEATHER_GATHER_COUNT == 0) {
+					if (currentDataIndex != 0 && currentDataIndex % Utils.DAILY_WEATHER_GATHER_COUNT == 0) {
 						Double minTemp = temperatureList.stream().mapToDouble(val -> val).min().getAsDouble();
 						Double avgTemp = temperatureList.stream().mapToDouble(val -> val).average().getAsDouble();
 						Double maxTemp = temperatureList.stream().mapToDouble(val -> val).max().getAsDouble();
@@ -238,7 +241,7 @@ public class WeatherProcessing {
 		} else {
 			sendMessage = new SendMessage(chatId, "You didn't search any location until now!").parseMode(ParseMode.HTML)
 					.disableWebPagePreview(true).disableNotification(true).replyToMessageId(messageId)
-					.replyMarkup(UItils.showMainMenu());
+					.replyMarkup(Utils.showMainMenu());
 		}
 
 		return sendMessage;

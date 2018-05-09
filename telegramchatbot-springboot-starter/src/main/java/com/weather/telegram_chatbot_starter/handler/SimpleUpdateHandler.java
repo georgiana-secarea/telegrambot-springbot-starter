@@ -23,11 +23,8 @@ import com.weather.telegram_chatbot_starter.service.ShareLocationAction;
 import com.weather.telegram_chatbot_starter.service.StartCommandAction;
 import com.weather.telegram_chatbot_starter.service.UnknownCommandAction;
 import com.weather.telegram_chatbot_starter.service.WeatherCommandAction;
-<<<<<<< HEAD
-import com.weather.telegram_chatbot_starter.utils.UItils;
-=======
-import com.weather.telegram_chatbot_starter.utils.BotUtils;
->>>>>>> branch 'master' of https://github.com/georgiana-secarea/telegrambot-springbot-starter
+
+import com.weather.telegram_chatbot_starter.utils.Utils;
 
 @Service
 public class SimpleUpdateHandler implements UpdatesListener {
@@ -129,71 +126,38 @@ public class SimpleUpdateHandler implements UpdatesListener {
 	 */
 	public void processUserMessages(Message message) {
 		final String messageText = message.text();
-<<<<<<< HEAD
-		if (messageText.startsWith(UItils.FAVORITE_LOCATION)) {
+
+		if (messageText.startsWith(Utils.FAVORITE_LOCATION)) {
 			favoriteLocationCommand.execute(telegramBot, message);
-		} else if (messageText.startsWith(UItils.CHOSEN_LOCATION_CURRENT_WEATHER)) {
+		} else if (messageText.startsWith(Utils.CHOSEN_LOCATION_CURRENT_WEATHER)) {
 			chosenLocationWeatherCommand.execute(telegramBot, message);
 		} else {
 			switch (messageText) {
-			case UItils.START_COMMAND: {
+			case Utils.START_COMMAND: {
 				startCommand.execute(telegramBot, message);
 				break;
 			}
-			case UItils.DENY_ACTION: {
+			case Utils.DENY_ACTION: {
 				denyButton.execute(telegramBot, message);
 				break;
 			}
-			case UItils.SHOW_FORECAST: {
+			case Utils.SHOW_FORECAST: {
 				forecastButton.execute(telegramBot, message);
 				break;
 			}
-			case UItils.ANOTHER_LOCATION_WEATHER_INFO: {
+			case Utils.ANOTHER_LOCATION_WEATHER_INFO: {
 				anotherLocationWeatherButton.execute(telegramBot, message);
 				break;
 			}
-			case UItils.SEARCH_USER_LIST_HISTORY: {
+			case Utils.SEARCH_USER_LIST_HISTORY: {
 				searchHistoryButton.execute(telegramBot, message);
 				break;
 			}
-			case UItils.BACK_TO_MENU: {
+			case Utils.BACK_TO_MENU: {
 				backToMenuButton.execute(telegramBot, message);
 				break;
 			}
-			case UItils.APPLICATION_CREDITS: {
-=======
-		if (messageText.startsWith(BotUtils.FAVORITE_LOCATION)) {
-			favoriteLocationCommand.execute(telegramBot, message);
-		} else if (messageText.startsWith(BotUtils.CHOSEN_LOCATION_CURRENT_WEATHER)) {
-			chosenLocationWeatherCommand.execute(telegramBot, message);
-		} else {
-			switch (messageText) {
-			case BotUtils.START_COMMAND: {
-				startCommand.execute(telegramBot, message);
-				break;
-			}
-			case BotUtils.DENY_ACTION: {
-				denyButton.execute(telegramBot, message);
-				break;
-			}
-			case BotUtils.SHOW_FORECAST: {
-				forecastButton.execute(telegramBot, message);
-				break;
-			}
-			case BotUtils.ANOTHER_LOCATION_WEATHER_INFO: {
-				anotherLocationWeatherButton.execute(telegramBot, message);
-				break;
-			}
-			case BotUtils.SEARCH_USER_LIST_HISTORY: {
-				searchHistoryButton.execute(telegramBot, message);
-				break;
-			}
-			case BotUtils.BACK_TO_MENU: {
-				backToMenuButton.execute(telegramBot, message);
-				break;
-			}
-			case BotUtils.APPLICATION_CREDITS: {
->>>>>>> branch 'master' of https://github.com/georgiana-secarea/telegrambot-springbot-starter
+			case Utils.APPLICATION_CREDITS: {
 				applicationCreditsButton.execute(telegramBot, message);
 				break;
 			}
@@ -202,26 +166,7 @@ public class SimpleUpdateHandler implements UpdatesListener {
 				break;
 			}
 			}
+
 		}
 	}
-
-	// public void processUserMessages(Message message) {
-	// final String messageText = message.text();
-	// boolean foundValue = false;
-	// for (InputCommands command : InputCommands.values()) {
-	// if (command.getCommandText().matches(messageText)) {
-	// command.getAction().execute(bot, message);
-	// foundValue = true;
-	// break;
-	// } else if (command.getCommandText().startsWith(messageText)) {
-	// command.getAction().execute(bot, message);
-	// foundValue = true;
-	// break;
-	// }
-	// }
-	// if (!foundValue) {
-	// InputCommands command = InputCommands.UNKNOWN_COMMAND;
-	// command.getAction().execute(bot, message);
-	// }
-	// }
 }

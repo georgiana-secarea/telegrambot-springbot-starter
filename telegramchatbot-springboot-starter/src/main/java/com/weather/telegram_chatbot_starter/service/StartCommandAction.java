@@ -10,8 +10,7 @@ import com.pengrad.telegrambot.request.SendMessage;
 import com.weather.telegram_chatbot_starter.dao.IPersonDAO;
 import com.weather.telegram_chatbot_starter.model.Person;
 import com.weather.telegram_chatbot_starter.repo.PersonRepo;
-<<<<<<< HEAD
-import com.weather.telegram_chatbot_starter.utils.UItils;
+import com.weather.telegram_chatbot_starter.utils.Utils;
 
 @Service
 public class StartCommandAction implements MessageCommandAction<Void> {
@@ -34,43 +33,13 @@ public class StartCommandAction implements MessageCommandAction<Void> {
 			final SendMessage response = new SendMessage(chatId,
 					"Welcome back, " + person.getFirstName() + " " + person.getLastName()
 							+ ". What would you wish to check?").parseMode(ParseMode.HTML).disableNotification(false)
-									.replyToMessageId(messageId).replyMarkup(UItils.showMainMenu());
+									.replyToMessageId(messageId).replyMarkup(Utils.showMainMenu());
 			bot.execute(response);
 		} else {
 			personDAO.insertPerson(chatId);
 
-			final SendMessage response = UItils.shareDetailsMenu(chatId, messageId);
-=======
-import com.weather.telegram_chatbot_starter.utils.BotUtils;
+			final SendMessage response = Utils.shareDetailsMenu(chatId, messageId);
 
-@Service
-public class StartCommandAction implements MessageCommandAction<Void> {
-
-	@Autowired
-	private PersonRepo personRepo;
-
-	@Autowired
-	private IPersonDAO personDAO;
-
-	@Override
-	public Void execute(TelegramBot bot, Message message) {
-		final Integer chatId = message.from().id();
-		final Integer messageId = message.messageId();
-
-		final Person person = personRepo.findById(chatId);
-
-		if (person != null && person.getFirstName() != null) {
-
-			final SendMessage response = new SendMessage(chatId,
-					"Welcome back, " + person.getFirstName() + " " + person.getLastName()
-							+ ". What would you wish to check?").parseMode(ParseMode.HTML).disableNotification(false)
-									.replyToMessageId(messageId).replyMarkup(BotUtils.showMainMenu());
-			bot.execute(response);
-		} else {
-			personDAO.insertPerson(chatId);
-
-			final SendMessage response = BotUtils.shareDetailsMenu(chatId, messageId);
->>>>>>> branch 'master' of https://github.com/georgiana-secarea/telegrambot-springbot-starter
 			bot.execute(response);
 		}
 		return null;
