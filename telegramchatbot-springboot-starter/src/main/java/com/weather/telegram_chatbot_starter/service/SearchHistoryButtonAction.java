@@ -9,31 +9,31 @@ import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.request.SendMessage;
 import com.weather.telegram_chatbot_starter.dao.IPersonDAO;
-import com.weather.telegram_chatbot_starter.model.City;
+import com.weather.telegram_chatbot_starter.model.Location;
 import com.weather.telegram_chatbot_starter.weather.WeatherProcessing;
 
 @Service
 public class SearchHistoryButtonAction implements MessageCommandAction<Void> {
-
+	
 	@Autowired
 	private IPersonDAO personDAO;
-
+	
 	@Autowired
 	private WeatherProcessing weatherService;
-
+	
 	@Override
 	public Void execute(TelegramBot bot, Message message) {
-
+		
 		final Integer chatId = message.from().id();
 		final Integer messageId = message.messageId();
-
-		final Set<City> cities = personDAO.getHistoryForUser(chatId);
-
-		final SendMessage response = weatherService.retrieveUserSearchHistory(chatId, messageId, cities);
-
-		bot.execute(response);
-
+		
+		final Set<Location> cities = personDAO.getHistoryForUser(chatId);
+		
+		final SendMessage botResponse = weatherService.retrieveUserSearchHistory(chatId, messageId, cities);
+		
+		bot.execute(botResponse);
+		
 		return null;
 	}
-
+	
 }

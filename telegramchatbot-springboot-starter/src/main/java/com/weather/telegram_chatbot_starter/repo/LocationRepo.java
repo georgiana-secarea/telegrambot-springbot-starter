@@ -2,12 +2,18 @@ package com.weather.telegram_chatbot_starter.repo;
 
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
-import com.weather.telegram_chatbot_starter.model.City;
+import com.weather.telegram_chatbot_starter.model.Location;
 
-public interface LocationRepo extends JpaRepository<City, Long> {
+/**
+ * This is the JpaRepository based repo for the Location table objects
+ * 
+ * @author stan4
+ *
+ */
+public interface LocationRepo extends JpaRepository<Location, Long> {
 
-	Optional<City> findById(Long name);
+	Optional<Location> findById(Long name);
 
-	City findByName(String name);
+	Location findByName(String name);
 
 }

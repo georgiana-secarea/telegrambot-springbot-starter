@@ -1,5 +1,12 @@
 package com.weather.telegram_chatbot_starter.model;
 
+/**
+ * This is the class whose objects will store the forecast data received from
+ * the OWM API call
+ * 
+ * @author stan4
+ *
+ */
 public class Forecast {
 
 	public String time;

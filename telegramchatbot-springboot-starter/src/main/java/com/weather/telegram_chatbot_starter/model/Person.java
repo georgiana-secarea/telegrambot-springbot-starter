@@ -12,6 +12,12 @@ import javax.persistence.ManyToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+/**
+ * This is the entity class for the Person table
+ * 
+ * @author stan4
+ *
+ */
 @Entity
 @Table(name = "PERSON", schema = "public")
 public class Person {
@@ -30,14 +36,22 @@ public class Person {
 	private String lastName;
 
 	@ManyToMany(fetch = FetchType.EAGER)
-	private Set<City> city = new HashSet<City>();
+	private Set<Location> city = new HashSet<Location>();
 
 	@OneToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "favorite_city_id")
-	private City favoriteCity;
+	private Location favoriteCity;
+
+	@Column(name = "LAST_SEARCHED_CITY")
+	private String lastSearchedCity;
+
+	@Column(name = "NOTIFICATION_HOUR")
+	private String notificationHour;
+
+	@Column(name = "TIMEZONE_CET")
+	private String timeZoneCET;
 
 	public Person(String phone) {
-
 		phoneNumber = phone;
 	}
 
@@ -85,20 +99,44 @@ public class Person {
 		this.id = id;
 	}
 
-	public Set<City> getCity() {
+	public Set<Location> getCity() {
 		return city;
 	}
 
-	public void setCity(Set<City> city) {
+	public void setCity(Set<Location> city) {
 		this.city = city;
 	}
 
-	public City getFavoriteCity() {
+	public Location getFavoriteCity() {
 		return favoriteCity;
 	}
 
-	public void setFavoriteCity(City favoriteCity) {
+	public void setFavoriteCity(Location favoriteCity) {
 		this.favoriteCity = favoriteCity;
+	}
+
+	public String getLastSearchedCity() {
+		return lastSearchedCity;
+	}
+
+	public void setLastSearchedCity(String lastSearchedCity) {
+		this.lastSearchedCity = lastSearchedCity;
+	}
+
+	public String getNotificationHour() {
+		return notificationHour;
+	}
+
+	public void setNotificationHour(String notificationHour) {
+		this.notificationHour = notificationHour;
+	}
+
+	public String getTimeZoneCET() {
+		return timeZoneCET;
+	}
+
+	public void setTimeZoneCET(String timeZoneCET) {
+		this.timeZoneCET = timeZoneCET;
 	}
 
 }
