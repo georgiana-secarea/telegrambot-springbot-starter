@@ -26,6 +26,9 @@ public class StartCommandAction implements MessageCommandAction<Void> {
 	@Autowired
 	private IMessageDAO messageDAO;
 	
+	@Autowired
+	private MenuUtils menuUtils;
+	
 	@Override
 	public Void execute(TelegramBot bot, Message message) {
 		final Integer chatId = message.from().id();
@@ -37,20 +40,18 @@ public class StartCommandAction implements MessageCommandAction<Void> {
 		if (inputPerson != null && inputPerson.getFirstName() != null) {
 			
 			botResponse = new SendMessage(chatId,
-					String.format(messageDAO.getMessage("start"), inputPerson.getFirstName(),
+					String.format(messageDAO.getMessage("startRegisteredUser"), inputPerson.getFirstName(),
 							inputPerson.getLastName())).parseMode(ParseMode.HTML).disableNotification(false)
-									.replyToMessageId(messageId).replyMarkup(MenuUtils.showMainMenu());
+									.replyToMessageId(messageId).replyMarkup(menuUtils.showMainMenu());
 			
 			bot.execute(botResponse);
 		} else {
 			personDAO.insertPerson(chatId);
 			
-			ReplyKeyboardMarkup shareKeyboard = MenuUtils.shareDetailsMenu(chatId, messageId);
+			ReplyKeyboardMarkup shareKeyboard = menuUtils.shareDetailsMenu(chatId, messageId);
 			
-			botResponse = new SendMessage(chatId,
-					"Hi, I'm WeatherBOT. To receive daily notifications of your favorite location weather,"
-							+ " please share your name, phone number and location.").parseMode(ParseMode.HTML)
-									.disableNotification(false).replyToMessageId(messageId).replyMarkup(shareKeyboard);
+			botResponse = new SendMessage(chatId, messageDAO.getMessage("startNewUser")).parseMode(ParseMode.HTML)
+					.disableNotification(false).replyToMessageId(messageId).replyMarkup(shareKeyboard);
 			
 			bot.execute(botResponse);
 		}

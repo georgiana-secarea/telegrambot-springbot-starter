@@ -29,7 +29,7 @@ public class WeatherCommandAction implements MessageCommandAction<Void> {
 		personDAO.insertLocation(inputLocation[1], chatId);
 		personDAO.insertLastSearchedLocation(inputLocation[1], chatId);
 		
-		final SendMessage botResponse = weatherService.processWeather(chatId, messageId, inputLocation[1]);
+		final SendMessage botResponse = weatherService.processWeather(chatId, messageId, inputLocation[1], false);
 		
 		bot.execute(botResponse);
 		

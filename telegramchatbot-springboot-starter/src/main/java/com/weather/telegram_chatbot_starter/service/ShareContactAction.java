@@ -19,7 +19,7 @@ public class ShareContactAction implements MessageCommandAction<Void> {
 	private IPersonDAO personDAO;
 	
 	@Autowired
-	IMessageDAO messageDAO;
+	private IMessageDAO messageDAO;
 	
 	@Override
 	public Void execute(TelegramBot bot, Message message) {

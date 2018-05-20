@@ -16,6 +16,9 @@ public class ApplicationCreditsButtonAction implements MessageCommandAction<Void
 	@Autowired
 	private IMessageDAO messageDAO;
 	
+	@Autowired
+	private MenuUtils menuUtils;
+	
 	@Override
 	public Void execute(TelegramBot bot, Message message) {
 		
@@ -24,10 +27,11 @@ public class ApplicationCreditsButtonAction implements MessageCommandAction<Void
 		
 		final SendMessage botResponse = new SendMessage(chatId,
 				String.format(messageDAO.getMessage("applicationDevelopers"))).parseMode(ParseMode.HTML)
-						.disableNotification(false).replyToMessageId(messageId).replyMarkup(MenuUtils.showMainMenu());
+						.disableNotification(false).replyToMessageId(messageId).replyMarkup(menuUtils.showMainMenu());
 		
 		bot.execute(botResponse);
 		
 		return null;
 	}
+	
 }

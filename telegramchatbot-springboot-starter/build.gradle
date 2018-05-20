@@ -36,10 +36,10 @@ ext.exludeDefaultLogger =
 
 dependencies {
 
-	//SPRING
+	// Spring
 	compile('org.springframework.boot:spring-boot-starter-web:1.5.9.RELEASE', exludeDefaultLogger)
 	
-	//JPA
+	// JPA
 	compile ('org.springframework.boot:spring-boot-starter-data-jpa:1.5.9.RELEASE',exludeDefaultLogger)
 	
 	compile group: 'org.hibernate', name: 'hibernate-core', version: '5.2.12.Final'
@@ -47,40 +47,41 @@ dependencies {
 	compile ('org.hibernate:hibernate-java8:5.2.12.Final')
 	compile('org.eclipse.persistence:javax.persistence:2.1.0')
 	
-	//JTelegram
+	// JTelegram
 	compile 'com.github.pengrad:java-telegram-bot-api:3.6.0'
 	
-	//Database
+	// Database
 	compile ('commons-dbcp:commons-dbcp:1.4')
 	compile ('org.postgresql:postgresql:42.1.4')
       
-    //HIBERNATE TYPES    
+    // Hibernate Types    
     compile ('com.vladmihalcea:hibernate-types-52:1.0.0')
    
-    //JACKSON
+    // Jackson
     compile ('com.fasterxml.jackson.core:jackson-core:2.9.1')
     compile ('com.fasterxml.jackson.core:jackson-databind:2.9.1')
     compile ('com.fasterxml.jackson.core:jackson-annotations:2.9.1')
     compile ('com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.9.1')  
         
-    //LOG4J
+    // Log4j
     compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.9.1'
     compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.9.1'
 
-	//OTHERS
+	// Others
 	compile('org.projectlombok:lombok:1.16.18')
     compile group: 'com.google.code.gson', name: 'gson', version: '2.7'
     compile group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
+    compile group: 'org.json', name: 'json', version: '20180130'
     compile ('org.aspectj:aspectjweaver:1.8.11')	
     compile "commons-io:commons-io:2.5"
 	
-	 //devtools
+	// Devtools
     runtime('org.springframework.boot:spring-boot-devtools:1.5.9.RELEASE', exludeDefaultLogger)
 	
-	//Test    
+	// Test    
    	testCompile ('org.springframework.boot:spring-boot-starter-test:1.5.9.RELEASE', exludeDefaultLogger)
    	
-   	//Mokito
+   	// Mokito
    	testCompile ('org.mockito:mockito-core:2.11.0')
 	testCompile ('junit:junit:4.12')
 	
@@ -88,7 +89,11 @@ dependencies {
 	compile 'com.google.maps:google-maps-services:0.2.6'
     compile 'org.slf4j:slf4j-nop:1.7.25'
     
+    // OpenWeatherMap API
     compile group: 'net.aksingh', name: 'owm-japis', version: '2.5.2.2'
+    
+    // Emoji(s)
+    compile group: 'com.vdurmont', name: 'emoji-java', version: '4.0.0'
 
 }
 

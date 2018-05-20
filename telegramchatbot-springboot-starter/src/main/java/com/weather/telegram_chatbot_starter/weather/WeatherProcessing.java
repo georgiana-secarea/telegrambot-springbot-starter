@@ -8,13 +8,13 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.pengrad.telegrambot.model.request.ForceReply;
 import com.pengrad.telegrambot.model.request.ParseMode;
 import com.pengrad.telegrambot.request.SendMessage;
 import com.weather.telegram_chatbot_starter.config.Properties;
 import com.weather.telegram_chatbot_starter.dao.IAdviceDAO;
 import com.weather.telegram_chatbot_starter.dao.IMessageDAO;
 import com.weather.telegram_chatbot_starter.model.Location;
+import com.weather.telegram_chatbot_starter.model.Advice;
 import com.weather.telegram_chatbot_starter.model.Forecast;
 import com.weather.telegram_chatbot_starter.model.Weather;
 import com.weather.telegram_chatbot_starter.utils.MenuUtils;
@@ -40,6 +40,9 @@ public class WeatherProcessing implements IWeatherProcessing {
 	@Autowired
 	private Properties properties;
 	
+	@Autowired
+	private MenuUtils menuUtils;
+	
 	/**
 	 * This method processes the current weather information based on the input
 	 * location
@@ -49,25 +52,32 @@ public class WeatherProcessing implements IWeatherProcessing {
 	 * @param locationStr
 	 * @return
 	 */
-	public SendMessage processWeather(Integer chatId, Integer messageId, String locationStr) {
+	public SendMessage processWeather(Integer chatId, Integer messageId, String locationStr, boolean saveLocation) {
 		SendMessage sendMessage;
 		
 		if (locationStr == null) {
 			sendMessage = new SendMessage(chatId, String.format(messageDAO.getMessage("noLocationReceived")))
 					.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
-					.replyMarkup(new ForceReply());
+					.replyMarkup(menuUtils.showForecastMenu());
 		} else {
 			try {
 				final Weather currentWeather = getCurrentWeather(locationStr);
 				
-				sendMessage = new SendMessage(chatId, String.format(
-						"Your location has been saved internally, in case you want to check your search history (%s).\n\n Below you have the current weather information: \n %s \n\n Would you like to check the forecast for this location too?",
-						locationStr, currentWeather.toString())).parseMode(ParseMode.HTML).disableNotification(false)
-								.replyToMessageId(messageId).replyMarkup(MenuUtils.showForecastMenu());
+				if (saveLocation) {
+					sendMessage = new SendMessage(chatId,
+							String.format(messageDAO.getMessage("weatherSavedLocation"), locationStr,
+									currentWeather.toString())).parseMode(ParseMode.HTML).disableNotification(false)
+											.replyToMessageId(messageId).replyMarkup(menuUtils.showForecastMenu());
+				} else {
+					sendMessage = new SendMessage(chatId,
+							String.format(messageDAO.getMessage("weatherNoSave"), locationStr,
+									currentWeather.toString())).parseMode(ParseMode.HTML).disableNotification(false)
+											.replyMarkup(menuUtils.showForecastMenu());
+				}
 			} catch (final APIException e) {
 				sendMessage = new SendMessage(chatId, String.format(messageDAO.getMessage("processingException")))
 						.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
-						.replyMarkup(new ForceReply());
+						.replyMarkup(menuUtils.showMainMenu());
 			}
 		}
 		return sendMessage;
@@ -92,7 +102,17 @@ public class WeatherProcessing implements IWeatherProcessing {
 			// checking if city name is available
 			if (cwd.hasCityName()) {
 				
-				final String currentAdvice = adviceDAO.getMessage(cwd.getWeatherList().get(0).getMainInfo());
+				String adviceEmoji;
+				String adviceMessage;
+				
+				final Advice adviceObj = adviceDAO.getAdvice(cwd.getWeatherList().get(0).getMainInfo());
+				if (adviceObj == null) {
+					adviceEmoji = ":no_entry_sign:";
+					adviceMessage = "Condition unknown!";
+				} else {
+					adviceEmoji = adviceObj.getEmoji();
+					adviceMessage = adviceObj.getMessage();
+				}
 				
 				final Weather currentWeather = new Weather();
 				currentWeather.setTemperature(cwd.getMainData().getTemp() - 273.15);
@@ -100,7 +120,8 @@ public class WeatherProcessing implements IWeatherProcessing {
 				currentWeather.setPressure(cwd.getMainData().getPressure());
 				currentWeather.setHumidity(cwd.getMainData().getHumidity());
 				currentWeather.setRainfall(cwd.getCloudData().getCloud());
-				currentWeather.setAdvice(currentAdvice);
+				currentWeather.setStatusEmoji(adviceEmoji);
+				currentWeather.setAdvice(adviceMessage);
 				return currentWeather;
 			}
 			
@@ -132,17 +153,17 @@ public class WeatherProcessing implements IWeatherProcessing {
 						displayForecast = displayForecast.concat(currentHourForecast.toString());
 				}
 				sendMessage = new SendMessage(chatId,
-						String.format("Below is the forecast for %s: \n\n%s", locationStr, displayForecast))
+						String.format(messageDAO.getMessage("forecast"), locationStr, displayForecast))
 								.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
-								.replyMarkup(MenuUtils.showMainMenu());
+								.replyMarkup(menuUtils.showMainMenu());
 			} else
 				sendMessage = new SendMessage(chatId, String.format(messageDAO.getMessage("noLocationReceived")))
 						.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
-						.replyMarkup(new ForceReply());
+						.replyMarkup(menuUtils.showMainMenu());
 		} catch (APIException e) {
 			sendMessage = new SendMessage(chatId, String.format(messageDAO.getMessage("processingException")))
 					.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
-					.replyMarkup(new ForceReply());
+					.replyMarkup(menuUtils.showMainMenu());
 		}
 		return sendMessage;
 	}
@@ -216,6 +237,9 @@ public class WeatherProcessing implements IWeatherProcessing {
 	}
 	
 	/**
+	 * This method calculates the forecast data for a specified weather list that
+	 * includes daily weather information
+	 * 
 	 * @param temperatureList
 	 * @param rainfallList
 	 * @param pressureList
@@ -265,16 +289,16 @@ public class WeatherProcessing implements IWeatherProcessing {
 		
 		if (citiesSet != null && !citiesSet.isEmpty()) {
 			for (Location currentCity : citiesSet) {
-				citiesList = citiesList.concat(currentCity.getName() + "; ");
+				citiesList = citiesList.concat("• " + currentCity.getName() + "\n");
 			}
 			sendMessage = new SendMessage(chatId,
 					String.format(messageDAO.getMessage("userSearchedLocationsList"), citiesList))
 							.parseMode(ParseMode.HTML).disableWebPagePreview(true).disableNotification(true)
-							.replyToMessageId(messageId).replyMarkup(new ForceReply());
+							.replyToMessageId(messageId).replyMarkup(menuUtils.showMainMenu());
 		} else {
 			sendMessage = new SendMessage(chatId, messageDAO.getMessage("noLocationSearched")).parseMode(ParseMode.HTML)
 					.disableWebPagePreview(true).disableNotification(true).replyToMessageId(messageId)
-					.replyMarkup(MenuUtils.showMainMenu());
+					.replyMarkup(menuUtils.showMainMenu());
 		}
 		
 		return sendMessage;

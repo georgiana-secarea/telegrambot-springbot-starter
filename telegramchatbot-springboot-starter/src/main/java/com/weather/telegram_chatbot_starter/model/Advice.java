@@ -28,6 +28,9 @@ public class Advice {
 	@Column(name = "CONDITION", unique = true)
 	private String condition;
 	
+	@Column(name = "EMOJI")
+	private String emoji;
+	
 	@Column(name = "MESSAGE", unique = true)
 	private String message;
 	
@@ -39,6 +42,14 @@ public class Advice {
 		this.id = id;
 	}
 	
+	public String getLanguage() {
+		return language;
+	}
+	
+	public void setLanguage(String language) {
+		this.language = language;
+	}
+	
 	public String getCondition() {
 		return condition;
 	}
@@ -47,20 +58,20 @@ public class Advice {
 		this.condition = condition;
 	}
 	
+	public String getEmoji() {
+		return emoji;
+	}
+	
+	public void setEmoji(String emoji) {
+		this.emoji = emoji;
+	}
+	
 	public String getMessage() {
 		return message;
 	}
 	
 	public void setMessage(String message) {
 		this.message = message;
-	}
-	
-	public String getLanguage() {
-		return language;
-	}
-	
-	public void setLanguage(String language) {
-		this.language = language;
 	}
 	
 }

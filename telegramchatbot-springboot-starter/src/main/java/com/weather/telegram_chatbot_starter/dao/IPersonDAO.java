@@ -9,38 +9,33 @@ import com.pengrad.telegrambot.model.Contact;
 import com.weather.telegram_chatbot_starter.model.*;
 
 public interface IPersonDAO {
-
+	
 	public List<Person> getAllPersons();
-
+	
 	public Person getPerson(int userId);
-
+	
 	public void insertPerson(Contact contact);
-
+	
 	public void insertPerson(int userId);
-
+	
 	@Transactional
 	public void insertLocation(String location, int userId);
-
+	
 	@Transactional
 	public void insertLastSearchedLocation(String location, int userId);
-
+	
 	@Transactional
 	public void insertFavoriteLocation(String location, int userId);
-
+	
 	@Transactional
 	public void insertNotificationHour(String hour, int userId);
-
-	@Transactional
-	public void insertTimeZone(String timeZone, int userId);
-
+	
 	public String getFavoriteLocationForUser(int userId);
-
+	
 	public String getLastSearchedLocationForUser(int userId);
-
+	
 	public String getNotificationHourForUser(int userId);
-
-	public String getTimeZoneForUser(int userId);
-
+	
 	public Set<Location> getHistoryForUser(int userId);
-
+	
 }

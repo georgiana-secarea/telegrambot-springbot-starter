@@ -30,7 +30,7 @@ public class FavoriteLocationCommandAction implements MessageCommandAction<Void>
 		personDAO.insertFavoriteLocation(inputLocation[1], chatId);
 		personDAO.insertLastSearchedLocation(inputLocation[1], chatId);
 		
-		final SendMessage botResponse = weatherService.processWeather(chatId, messageId, inputLocation[1]);
+		final SendMessage botResponse = weatherService.processWeather(chatId, messageId, inputLocation[1], true);
 		
 		bot.execute(botResponse);
 		

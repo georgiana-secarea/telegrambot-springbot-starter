@@ -16,6 +16,9 @@ public class UnknownCommandAction implements MessageCommandAction<Void> {
 	@Autowired
 	private IMessageDAO messageDAO;
 	
+	@Autowired
+	private MenuUtils menuUtils;
+	
 	@Override
 	public Void execute(TelegramBot bot, Message message) {
 		Integer chatId = message.from().id();
@@ -23,7 +26,7 @@ public class UnknownCommandAction implements MessageCommandAction<Void> {
 		
 		final SendMessage botResponse = new SendMessage(chatId, String.format(messageDAO.getMessage("unknown")))
 				.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
-				.replyMarkup(MenuUtils.showMainMenu());
+				.replyMarkup(menuUtils.showMainMenu());
 		
 		bot.execute(botResponse);
 		

@@ -23,16 +23,16 @@ import net.aksingh.owmjapis.core.OWM;
 @Configuration
 @ComponentScan({ "com.weather.telegram_chatbot_starter" })
 public class BeanConfig {
-
+	
 	/** The Constant LOGGER. */
 	public static final Logger LOGGER = LogManager.getLogger();
-
+	
 	@Autowired
 	private Properties properties;
-
+	
 	@Autowired
 	private ProcessUpdatesHandler updateHandler;
-
+	
 	@Bean
 	public CommandLineRunner runTelegramBot() {
 		return (args) -> {
@@ -40,7 +40,7 @@ public class BeanConfig {
 			bot.setUpdatesListener(updateHandler);
 		};
 	}
-
+	
 	/**
 	 * This method generates a new TelegramBot instance
 	 * 
@@ -51,7 +51,7 @@ public class BeanConfig {
 		final TelegramBot bot = new TelegramBot(properties.getBotApiKey());
 		return bot;
 	}
-
+	
 	/**
 	 * This method generates a new OpenWeatherMap API instance
 	 * 
@@ -62,7 +62,7 @@ public class BeanConfig {
 		final OWM owm = new OWM(properties.getWeatherApiKey());
 		return owm;
 	}
-
+	
 	/**
 	 * This method generates a new GoogleGeocoding API instance
 	 * 
@@ -73,5 +73,5 @@ public class BeanConfig {
 		final GeoApiContext context = new GeoApiContext.Builder().apiKey(properties.getGeocodingApiKey()).build();
 		return context;
 	}
-
+	
 }

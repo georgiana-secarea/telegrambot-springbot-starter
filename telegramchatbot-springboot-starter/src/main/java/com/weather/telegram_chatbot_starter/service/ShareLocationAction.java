@@ -63,7 +63,7 @@ public class ShareLocationAction implements MessageCommandAction<Void> {
 		
 		personDAO.insertLocation(currentLocation, chatId);
 		
-		final SendMessage response = weatherService.processWeather(chatId, messageId, currentLocation);
+		final SendMessage response = weatherService.processWeather(chatId, messageId, currentLocation, false);
 		bot.execute(response);
 		
 		return null;

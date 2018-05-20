@@ -1,9 +1,17 @@
 package com.weather.telegram_chatbot_starter.utils;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.pengrad.telegrambot.model.request.KeyboardButton;
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup;
+import com.weather.telegram_chatbot_starter.config.Properties;
 
+@Component
 public final class MenuUtils {
+	
+	@Autowired
+	private Properties properties;
 	
 	public final static String START = "/start";
 	public final static String DENY = "Deny";
@@ -15,18 +23,20 @@ public final class MenuUtils {
 	public final static String ANOTHER_LOCATION_WEATHER_INFO = "Another location weather information";
 	public final static String SEARCH_USER_LIST_HISTORY = "My search list history";
 	public final static String BACK_TO_MENU = "Go back to menu";
-	public final static String APPLICATION_CREDITS = "App credits";
+	public final static String APPLICATION_CREDITS = "Application credits";
 	
 	/**
 	 * This method generates a menu with the core features of this WeatherBOT
 	 * 
 	 * @return
 	 */
-	public static ReplyKeyboardMarkup showMainMenu() {
-		final KeyboardButton currentLocationWeather = new KeyboardButton("Current location weather information");
-		final KeyboardButton otherLocationWeather = new KeyboardButton("Another location weather information");
-		final KeyboardButton userSearchHistory = new KeyboardButton("My search list history");
-		final KeyboardButton appCredits = new KeyboardButton("App credits");
+	public ReplyKeyboardMarkup showMainMenu() {
+		final KeyboardButton currentLocationWeather = new KeyboardButton(
+				properties.getCurrentLocationWeatherInformation());
+		final KeyboardButton otherLocationWeather = new KeyboardButton(
+				properties.getAnotherLocationWeatherInformation());
+		final KeyboardButton userSearchHistory = new KeyboardButton(properties.getSearchListHistory());
+		final KeyboardButton appCredits = new KeyboardButton(properties.getApplicationCredits());
 		
 		currentLocationWeather.requestLocation(true);
 		
@@ -48,9 +58,9 @@ public final class MenuUtils {
 	 *
 	 * @return
 	 */
-	public static ReplyKeyboardMarkup showForecastMenu() {
-		final KeyboardButton showForecastButton = new KeyboardButton("Show forecast");
-		final KeyboardButton goToMenuButton = new KeyboardButton("Go back to menu");
+	public ReplyKeyboardMarkup showForecastMenu() {
+		final KeyboardButton showForecastButton = new KeyboardButton(properties.getShowForecast());
+		final KeyboardButton goToMenuButton = new KeyboardButton(properties.getGoBackToMenu());
 		
 		final KeyboardButton[][] buttonsList = new KeyboardButton[1][2];
 		buttonsList[0][0] = showForecastButton;
@@ -70,9 +80,9 @@ public final class MenuUtils {
 	 * @param messageId
 	 * @return
 	 */
-	public static ReplyKeyboardMarkup shareDetailsMenu(Integer chatId, Integer messageId) {
-		final KeyboardButton contactButton = new KeyboardButton("Share contact details");
-		final KeyboardButton denyButton = new KeyboardButton("Deny");
+	public ReplyKeyboardMarkup shareDetailsMenu(Integer chatId, Integer messageId) {
+		final KeyboardButton contactButton = new KeyboardButton(properties.getShareContactDetails());
+		final KeyboardButton denyButton = new KeyboardButton(properties.getDeny());
 		contactButton.requestContact(true);
 		
 		final KeyboardButton[][] buttonsList = new KeyboardButton[1][2];

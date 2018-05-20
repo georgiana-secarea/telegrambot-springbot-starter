@@ -33,7 +33,7 @@ public class NotificationHourCommandAction implements MessageCommandAction<Void>
 		final boolean isNumeric = inputNotificationHour[1].chars().allMatch(Character::isDigit);
 		if (isNumeric) {
 			final int hour = Integer.parseInt(inputNotificationHour[1]);
-			if (hour >= 0 && hour <= 23) {
+			if (hour >= 0 && hour <= 59) {
 				personDAO.insertNotificationHour(inputNotificationHour[1], chatId);
 				
 				botResponse = new SendMessage(chatId,
