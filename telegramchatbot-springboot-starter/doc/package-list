@@ -1,0 +1,9 @@
+com.weather.telegram_chatbot_starter
+com.weather.telegram_chatbot_starter.config
+com.weather.telegram_chatbot_starter.dao
+com.weather.telegram_chatbot_starter.handler
+com.weather.telegram_chatbot_starter.model
+com.weather.telegram_chatbot_starter.repo
+com.weather.telegram_chatbot_starter.service
+com.weather.telegram_chatbot_starter.utils
+com.weather.telegram_chatbot_starter.weather
