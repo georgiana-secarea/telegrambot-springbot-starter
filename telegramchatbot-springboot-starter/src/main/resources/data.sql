@@ -38,7 +38,7 @@ Please enter a valid hour using the format "/hour desiredHour", between 0 and 23
 
 INSERT INTO message (id,meaning,message) VALUES ('13','conversionException','The location could not be parsed due to a conversion error, please try again later!') ON CONFLICT DO NOTHING;
 
-INSERT INTO message (id,meaning,message) VALUES ('14','startRegisteredUser','Welcome back, %s %s. What would you wish to check right now?') ON CONFLICT DO NOTHING;
+INSERT INTO message (id,meaning,message) VALUES ('14','startRegisteredUser','Welcome back, %s. What would you wish to check right now?') ON CONFLICT DO NOTHING;
 
 INSERT INTO message (id,meaning,message) VALUES ('15','startNewUser','Hello. I am your friendly WeatherBOT. 
 To receive daily notifications of your favorite location weather, please share your contact details by pressing the "Share contact details" button which can be found below.') ON CONFLICT DO NOTHING;

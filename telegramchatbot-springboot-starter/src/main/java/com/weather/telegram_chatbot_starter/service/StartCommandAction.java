@@ -40,9 +40,9 @@ public class StartCommandAction implements MessageCommandAction<Void> {
 		if (inputPerson != null && inputPerson.getFirstName() != null) {
 			
 			botResponse = new SendMessage(chatId,
-					String.format(messageDAO.getMessage("startRegisteredUser"), inputPerson.getFirstName(),
-							inputPerson.getLastName())).parseMode(ParseMode.HTML).disableNotification(false)
-									.replyToMessageId(messageId).replyMarkup(menuUtils.showMainMenu());
+					String.format(messageDAO.getMessage("startRegisteredUser"), inputPerson.getFirstName()))
+							.parseMode(ParseMode.HTML).disableNotification(false).replyToMessageId(messageId)
+							.replyMarkup(menuUtils.showMainMenu());
 			
 			bot.execute(botResponse);
 		} else {

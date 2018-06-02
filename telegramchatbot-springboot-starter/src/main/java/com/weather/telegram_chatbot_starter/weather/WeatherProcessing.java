@@ -187,7 +187,7 @@ public class WeatherProcessing implements IWeatherProcessing {
 			if (forecast.hasDataList()) {
 				
 				final int nextDayFirstIndex = ((properties.getDailyHours() - LocalDateTime.now().getHour())
-						/ properties.getNextSearchHoursInterval() + 1);
+						/ properties.getNextSearchHoursInterval());
 				
 				final List<WeatherData> nextDaysForecast = forecast.getDataList().subList(0,
 						nextDayFirstIndex + properties.getNextThreeDaysEntriesCount());
